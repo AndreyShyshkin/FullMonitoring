@@ -29,4 +29,20 @@ public sealed record ProcessItem
     /// Поточний стан процесу.
     /// </summary>
     public string Status { get; init; } = "Виконується";
+
+    /// <summary>
+    /// Обсяг оперативної пам'яті у мегабайтах (для зручного відображення).
+    /// </summary>
+    public double RamUsageMb => Math.Round(RamUsageBytes / (1024.0 * 1024.0), 2);
+
+    public ProcessItem() { }
+
+    public ProcessItem(int pid, string name, long ramUsageBytes, int threadCount, string status = "Виконується")
+    {
+        Pid = pid;
+        Name = string.IsNullOrWhiteSpace(name) ? "Невідомо" : name.Trim();
+        RamUsageBytes = Math.Max(0, ramUsageBytes);
+        ThreadCount = Math.Max(0, threadCount);
+        Status = string.IsNullOrWhiteSpace(status) ? "Виконується" : status.Trim();
+    }
 }
