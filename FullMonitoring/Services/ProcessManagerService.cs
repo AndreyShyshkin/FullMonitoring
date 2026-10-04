@@ -116,7 +116,69 @@ public class ProcessManagerService : IProcessManagerService
 
     public bool KillProcess(int pid)
     {
-        return false;
+        if (pid <= 0)
+        {
+            return false;
+        }
+
+        Process? process = null;
+        try
+        {
+            process = Process.GetProcessById(pid);
+        }
+        catch (ArgumentException)
+        {
+            // Процес із вказаним PID не знайдено
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            // Процес уже завершився
+            return false;
+        }
+
+        try
+        {
+            try
+            {
+                if (process.HasExited)
+                {
+                    return true;
+                }
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                // Обмежений доступ до системного процесу
+            }
+
+            process.Kill();
+            process.WaitForExit(1000);
+            return true;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // Недостатньо прав для завершення процесу
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Відсутні права доступу до процесу
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            // Процес завершився перед викликом Kill
+            return true;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
+        finally
+        {
+            // Обов'язкове звільнення дескриптора
+            process.Dispose();
+        }
     }
 
     public Task<bool> KillProcessAsync(int pid, CancellationToken cancellationToken = default)
