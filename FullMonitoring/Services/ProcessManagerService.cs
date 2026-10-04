@@ -111,7 +111,11 @@ public class ProcessManagerService : IProcessManagerService
 
     public Task<IReadOnlyList<ProcessItem>> GetRunningProcessesAsync(int limit = DefaultLimit, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyList<ProcessItem>>(Array.Empty<ProcessItem>());
+        return Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return GetRunningProcesses(limit);
+        }, cancellationToken);
     }
 
     public bool KillProcess(int pid)
@@ -183,6 +187,10 @@ public class ProcessManagerService : IProcessManagerService
 
     public Task<bool> KillProcessAsync(int pid, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(false);
+        return Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return KillProcess(pid);
+        }, cancellationToken);
     }
 }
