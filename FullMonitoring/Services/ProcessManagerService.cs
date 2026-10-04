@@ -88,6 +88,17 @@ public class ProcessManagerService : IProcessManagerService
                 // Безпечний пропуск процесів, які завершилися під час збору метрик
                 continue;
             }
+            finally
+            {
+                // Обов'язкове звільнення системного дескриптора процесу
+                try
+                {
+                    process.Dispose();
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         int effectiveLimit = limit > 0 ? limit : DefaultLimit;
