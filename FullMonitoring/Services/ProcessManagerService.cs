@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FullMonitoring.Interfaces;
@@ -88,7 +90,12 @@ public class ProcessManagerService : IProcessManagerService
             }
         }
 
-        return result;
+        int effectiveLimit = limit > 0 ? limit : DefaultLimit;
+
+        return result
+            .OrderByDescending(p => p.RamUsageBytes)
+            .Take(effectiveLimit)
+            .ToList();
     }
 
     public Task<IReadOnlyList<ProcessItem>> GetRunningProcessesAsync(int limit = DefaultLimit, CancellationToken cancellationToken = default)
