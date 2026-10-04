@@ -25,7 +25,11 @@
     - `WindowsProvider` — збір через WMI / Performance Counters / LibreHardwareMonitorLib.
     - `LinuxProvider` — прямий I/O парсинг `/sys/class/hwmon` та `/proc/stat`.
     - `MacOsProvider` — `sysctl` (P/Invoke) / Fallback-метрики для Apple Silicon.
-3. **UI Layer:** Views та ViewModels не мають прив'язки до поточної ОС. Відображення даних реалізовано через реактивний Data Binding.
+3. **Модуль процесів (Process Monitoring):**
+    - `IProcessManagerService` — інтерфейс збору телеметрії та завершення процесів.
+    - `ProcessManagerService` — реалізація на базі `System.Diagnostics.Process` (вибірка топ-50 процесів, сортування за спаданням оперативної пам'яті, безпечна обробка системних процесів та метод `KillProcess`).
+    - `ProcessItem` — DTO-модель процесу (PID, назва, споживання RAM, кількість потоків, статус).
+4. **UI Layer:** Views та ViewModels не мають прив'язки до поточної ОС. Відображення даних реалізовано через реактивний Data Binding.
 
 ---
 
