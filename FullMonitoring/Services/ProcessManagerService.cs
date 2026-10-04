@@ -29,13 +29,63 @@ public class ProcessManagerService : IProcessManagerService
         var result = new List<ProcessItem>(processes.Length);
         foreach (var process in processes)
         {
-            int pid = process.Id;
-            string name = process.ProcessName;
-            long ramBytes = process.WorkingSet64;
-            int threads = process.Threads.Count;
-            string status = "Виконується";
+            try
+            {
+                int pid = process.Id;
+                string name;
+                try
+                {
+                    name = process.ProcessName;
+                }
+                catch (Exception)
+                {
+                    name = $"Процес #{pid}";
+                }
 
-            result.Add(new ProcessItem(pid, name, ramBytes, threads, status));
+                long ramBytes = 0;
+                try
+                {
+                    ramBytes = process.WorkingSet64;
+                }
+                catch (Exception)
+                {
+                    ramBytes = 0;
+                }
+
+                int threads = 0;
+                try
+                {
+                    threads = process.Threads.Count;
+                }
+                catch (Exception)
+                {
+                    threads = 0;
+                }
+
+                string status = "Виконується";
+                try
+                {
+                    if (process.HasExited)
+                    {
+                        status = "Завершено";
+                    }
+                    else if (!process.Responding)
+                    {
+                        status = "Не відповідає";
+                    }
+                }
+                catch (Exception)
+                {
+                    status = "Виконується";
+                }
+
+                result.Add(new ProcessItem(pid, name, ramBytes, threads, status));
+            }
+            catch (Exception)
+            {
+                // Безпечний пропуск процесів, які завершилися під час збору метрик
+                continue;
+            }
         }
 
         return result;
