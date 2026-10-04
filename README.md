@@ -20,6 +20,8 @@
 
 1. **Core / Abstractions:** UI не работает с железом напрямую. Все модули телеметрии обращаются строго к интерфейсу `ITelemetryProvider`.
 2. **Platform Providers:**
+    - `BclTelemetryProvider` — базовый кроссплатформенный провайдер метрик (.NET BCL: `GC`, `DriveInfo`, `NetworkInterface`).
+    - `MockTelemetryProvider` — провайдер с генерацией псевдослучайных колебаний для параллельной разработки UI и тестирования.
     - `WindowsProvider` — сбор через WMI / Performance Counters / LibreHardwareMonitorLib.
     - `LinuxProvider` — прямой I/O парсинг `/sys/class/hwmon` и `/proc/stat`.
     - `MacOsProvider` — `sysctl` (P/Invoke) / Fallback-метрики для Apple Silicon.
@@ -45,6 +47,11 @@ git clone <URL_РЕПОЗИТОРИЯ>
 cd FullMonitoring
 dotnet restore
 dotnet build
+```
+
+### Запуск тестов
+```bash
+dotnet test
 ```
 
 ### Запуск приложения
