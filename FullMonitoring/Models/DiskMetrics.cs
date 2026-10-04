@@ -109,7 +109,7 @@ public sealed record DiskMetrics
 
         foreach (var d in Drives)
         {
-            if (d.IsReady)
+            if (d.IsReady && d.TotalBytes > 0)
             {
                 total += d.TotalBytes;
                 used += d.UsedBytes;
