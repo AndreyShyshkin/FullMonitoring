@@ -16,7 +16,29 @@ public class ProcessManagerService : IProcessManagerService
 
     public IReadOnlyList<ProcessItem> GetRunningProcesses(int limit = DefaultLimit)
     {
-        return Array.Empty<ProcessItem>();
+        Process[] processes;
+        try
+        {
+            processes = Process.GetProcesses();
+        }
+        catch (Exception)
+        {
+            return Array.Empty<ProcessItem>();
+        }
+
+        var result = new List<ProcessItem>(processes.Length);
+        foreach (var process in processes)
+        {
+            int pid = process.Id;
+            string name = process.ProcessName;
+            long ramBytes = process.WorkingSet64;
+            int threads = process.Threads.Count;
+            string status = "Виконується";
+
+            result.Add(new ProcessItem(pid, name, ramBytes, threads, status));
+        }
+
+        return result;
     }
 
     public Task<IReadOnlyList<ProcessItem>> GetRunningProcessesAsync(int limit = DefaultLimit, CancellationToken cancellationToken = default)
