@@ -1,60 +1,60 @@
 # FullMonitoring
 
-Кроссплатформенная утилита системного и аппаратного мониторинга (Windows, Linux, macOS).  
-Учебный проект в рамках курса по мультиплатформенной разработке.
+Кросплатформна утиліта системного та апаратного моніторингу (Windows, Linux, macOS).  
+Навчальний проєкт у межах курсу з мультиплатформної розробки.
 
 ---
 
-## Технологический стек
+## Технологічний стек
 
 - **Runtime:** .NET 10.0 (LTS)
 - **UI Framework:** Avalonia UI (v11+)
-- **Архитектурный паттерн:** MVVM (CommunityToolkit.Mvvm)
+- **Архітектурний патерн:** MVVM (CommunityToolkit.Mvvm)
 - **DI Container:** Microsoft.Extensions.DependencyInjection
 
 ---
 
-## Архитектура проекта
+## Архітектура проєкту
 
-Проект строится по принципу низкой связности (Decoupling) через паттерн **Strategy**:
+Проєкт будується за принципом низької зв'язності (Decoupling) із використанням патерну **Strategy**:
 
-1. **Core / Abstractions:** UI не работает с железом напрямую. Все модули телеметрии обращаются строго к интерфейсу `ITelemetryProvider`.
+1. **Core / Abstractions:** UI не взаємодіє з апаратним забезпеченням напряму. Усі модулі телеметрії звертаються виключно до інтерфейсу `ITelemetryProvider`.
 2. **Platform Providers:**
-    - `BclTelemetryProvider` — базовый кроссплатформенный провайдер метрик (.NET BCL: `GC`, `DriveInfo`, `NetworkInterface`).
-    - `MockTelemetryProvider` — провайдер с генерацией псевдослучайных колебаний для параллельной разработки UI и тестирования.
-    - `WindowsProvider` — сбор через WMI / Performance Counters / LibreHardwareMonitorLib.
-    - `LinuxProvider` — прямой I/O парсинг `/sys/class/hwmon` и `/proc/stat`.
+    - `BclTelemetryProvider` — базовий кросплатформний провайдер метрик (.NET BCL: `GC`, `DriveInfo`, `NetworkInterface`).
+    - `MockTelemetryProvider` — провайдер із генерацією псевдовипадкових коливань для паралельної розробки UI та тестування.
+    - `WindowsProvider` — збір через WMI / Performance Counters / LibreHardwareMonitorLib.
+    - `LinuxProvider` — прямий I/O парсинг `/sys/class/hwmon` та `/proc/stat`.
     - `MacOsProvider` — `sysctl` (P/Invoke) / Fallback-метрики для Apple Silicon.
-3. **UI Layer:** Views и ViewModels ничего не знают о текущей ОС. Отображение данных через реактивный Data Binding.
+3. **UI Layer:** Views та ViewModels не мають прив'язки до поточної ОС. Відображення даних реалізовано через реактивний Data Binding.
 
 ---
 
-## Требования для локальной разработки
+## Вимоги для локальної розробки
 
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- IDE на выбор:
-    - JetBrains Rider (с установленным плагином *Avalonia for Rider*)
-    - Visual Studio 2022 (компонент *.NET Desktop Development* + расширение *Avalonia*)
-    - VS Code (с расширением *C# Dev Kit* и *Avalonia*)
+- IDE на вибір:
+    - JetBrains Rider (із встановленим плагіном *Avalonia for Rider*)
+    - Visual Studio 2022 (компонент *.NET Desktop Development* + розширення *Avalonia*)
+    - VS Code (із розширеннями *C# Dev Kit* та *Avalonia*)
 
 ---
 
-## Быстрый старт
+## Швидкий старт
 
-### Клонирование и сборка
+### Клонування та збірка
 ```bash
-git clone <URL_РЕПОЗИТОРИЯ>
+git clone <URL_РЕПОЗИТОРІЮ>
 cd FullMonitoring
 dotnet restore
 dotnet build
 ```
 
-### Запуск тестов
+### Запуск тестів
 ```bash
 dotnet test
 ```
 
-### Запуск приложения
+### Запуск застосунку
 ```bash
 dotnet run --project FullMonitoring/FullMonitoring.csproj
 ```
