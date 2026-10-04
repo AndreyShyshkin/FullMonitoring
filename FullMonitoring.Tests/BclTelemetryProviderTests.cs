@@ -34,8 +34,8 @@ public class BclTelemetryProviderTests
         var ram = provider.GetRamMetrics();
 
         Assert.NotNull(ram);
-        Assert.True(ram.TotalBytes > 0, "Total RAM bytes should be greater than zero");
-        Assert.True(ram.UsedBytes >= 0, "Used RAM bytes should be non-negative");
+        Assert.True(ram.TotalBytes > 0, "Загальний обсяг RAM у байтах має бути більшим за нуль");
+        Assert.True(ram.UsedBytes >= 0, "Зайнятий обсяг RAM у байтах має бути невід'ємним");
         Assert.InRange(ram.UsedPercentage, 0.0, 100.0);
     }
 
@@ -48,7 +48,7 @@ public class BclTelemetryProviderTests
 
         Assert.NotNull(disk);
         Assert.NotNull(disk.Drives);
-        // On any standard OS at least one drive should be present
+        // На будь-якій стандартній ОС має бути присутній щонайменше один накопичувач
         Assert.NotEmpty(disk.Drives);
 
         foreach (var drive in disk.Drives)
@@ -66,7 +66,7 @@ public class BclTelemetryProviderTests
             }
         }
 
-        // At least one physical/main drive should be ready with capacity > 0
+        // Щонайменше один фізичний/основний накопичувач має бути готовим із місткістю > 0
         Assert.Contains(disk.Drives, d => d.IsReady && d.TotalBytes > 0);
         Assert.True(disk.TotalBytes > 0);
     }
@@ -80,7 +80,7 @@ public class BclTelemetryProviderTests
         Assert.NotNull(net1);
         Assert.NotNull(net1.Interfaces);
 
-        // Subsequent call to test speed calculation
+        // Повторний виклик для перевірки розрахунку швидкості
         var net2 = provider.GetNetworkMetrics();
         Assert.NotNull(net2);
         Assert.True(net2.TotalBytesReceived >= 0);

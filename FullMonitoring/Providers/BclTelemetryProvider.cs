@@ -12,8 +12,8 @@ using FullMonitoring.Models;
 namespace FullMonitoring.Providers;
 
 /// <summary>
-/// Cross-platform telemetry provider using standard .NET Base Class Library (BCL) APIs.
-/// Provides baseline telemetry for RAM (GC/Process), Disks (DriveInfo), and Network (NetworkInterface).
+/// Кросплатформний провайдер телеметрії на базі стандартних бібліотек .NET (BCL).
+/// Забезпечує базовий збір метрик для RAM (GC/Process), накопичувачів (DriveInfo) та мережі (NetworkInterface).
 /// </summary>
 public class BclTelemetryProvider : ITelemetryProvider
 {
@@ -28,7 +28,7 @@ public class BclTelemetryProvider : ITelemetryProvider
     private readonly Dictionary<string, (long bytesReceived, long bytesSent)> _previousNetworkStats = new();
 
     /// <inheritdoc />
-    public virtual string ProviderName => "BCL Base Telemetry Provider";
+    public virtual string ProviderName => "Базовий BCL-провайдер телеметрії";
 
     /// <inheritdoc />
     public virtual bool IsSupported => true;
@@ -124,7 +124,7 @@ public class BclTelemetryProvider : ITelemetryProvider
 
         if (totalBytes <= 0)
         {
-            // Fallback for environments where GC info is not populated
+            // Базовий варіант для середовищ, де інформація GC не заповнена
             try
             {
                 using var proc = Process.GetCurrentProcess();
@@ -213,13 +213,13 @@ public class BclTelemetryProvider : ITelemetryProvider
                 }
                 catch (Exception)
                 {
-                    // Drive might have been unmounted during query or require elevated privileges
+                    // Диск міг бути відмонтований під час опитування або вимагає підвищених привілеїв
                 }
             }
         }
         catch (Exception)
         {
-            // Handle restricted sandbox environment
+            // Обробка середовища з обмеженим доступом (sandbox)
         }
 
         return new DiskMetrics(drivesList);
@@ -291,13 +291,13 @@ public class BclTelemetryProvider : ITelemetryProvider
                     }
                     catch (Exception)
                     {
-                        // Statistics may fail for specific virtual interfaces or loopback
+                        // Статистика може бути недоступною для специфічних віртуальних інтерфейсів або loopback
                     }
                 }
             }
             catch (Exception)
             {
-                // Restricted environments
+                // Обробка середовища з обмеженим доступом (sandbox)
             }
 
             _lastNetworkCheckTime = now;

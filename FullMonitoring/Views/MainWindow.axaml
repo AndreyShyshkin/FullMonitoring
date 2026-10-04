@@ -10,8 +10,8 @@
         Title="FullMonitoring">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <!-- Це налаштовує DataContext лише для попереднього перегляду в IDE;
+             для встановлення реального DataContext під час виконання встановіть властивість DataContext у коді (див. App.axaml.cs) -->
         <vm:MainViewModel />
     </Design.DataContext>
 

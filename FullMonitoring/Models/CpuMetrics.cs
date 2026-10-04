@@ -4,27 +4,27 @@ using System.Collections.Generic;
 namespace FullMonitoring.Models;
 
 /// <summary>
-/// Telemetry metrics for Central Processing Unit (CPU).
+/// Метрики телеметрії центрального процесора (CPU).
 /// </summary>
 public sealed record CpuMetrics
 {
     /// <summary>
-    /// Total CPU load percentage across all cores (0.0 to 100.0).
+    /// Загальний відсоток навантаження CPU по всіх ядрах (0.0 до 100.0).
     /// </summary>
     public double TotalUsagePercentage { get; init; }
 
     /// <summary>
-    /// Individual CPU utilization percentage for each logical core.
+    /// Відсоток утилізації для кожного окремого логічного ядра CPU.
     /// </summary>
     public IReadOnlyList<double> CoreUsagesPercentage { get; init; } = Array.Empty<double>();
 
     /// <summary>
-    /// CPU package / average temperature in degrees Celsius, or null if sensors are unavailable.
+    /// Температура CPU в градусах Цельсія або null, якщо датчики недоступні.
     /// </summary>
     public double? TemperatureCelsius { get; init; }
 
     /// <summary>
-    /// CPU cooler fan speed in Revolutions Per Minute (RPM), or null if unavailable.
+    /// Швидкість обертання кулера CPU в обертах за хвилину (RPM) або null, якщо показник недоступний.
     /// </summary>
     public double? FanSpeedRpm { get; init; }
 

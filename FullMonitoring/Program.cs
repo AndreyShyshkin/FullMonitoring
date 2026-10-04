@@ -1,18 +1,17 @@
-﻿using Avalonia;
+using Avalonia;
 using System;
 
 namespace FullMonitoring;
 
 sealed class Program
 {
-    // Initialization code. Don't use any Avalonia, third-party APIs or any
-    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-    // yet and stuff might break.
+    // Код ініціалізації. Не використовуйте Avalonia, сторонні API або будь-який код,
+    // що залежить від SynchronizationContext, до виклику AppMain: компоненти ще не ініціалізовані.
     [STAThread]
     public static void Main(string[] args) => BuildAvaloniaApp()
         .StartWithClassicDesktopLifetime(args);
 
-    // Avalonia configuration, don't remove; also used by visual designer.
+    // Конфігурація Avalonia, не видаляти; також використовується візуальним дизайнером.
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()

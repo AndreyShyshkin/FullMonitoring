@@ -54,7 +54,7 @@ public class TelemetryModelsTests
         var drive1 = new DriveItemMetrics
         {
             Name = "C:\\",
-            VolumeLabel = "System",
+            VolumeLabel = "Системний",
             RootDirectory = "C:\\",
             DriveType = "Fixed",
             DriveFormat = "NTFS",
@@ -67,7 +67,7 @@ public class TelemetryModelsTests
         var drive2 = new DriveItemMetrics
         {
             Name = "D:\\",
-            VolumeLabel = "Optical",
+            VolumeLabel = "Оптичний",
             RootDirectory = "D:\\",
             DriveType = "CDRom",
             DriveFormat = "",

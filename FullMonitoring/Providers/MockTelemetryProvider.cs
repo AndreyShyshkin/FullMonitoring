@@ -8,8 +8,8 @@ using FullMonitoring.Models;
 namespace FullMonitoring.Providers;
 
 /// <summary>
-/// Mock telemetry provider that generates realistic pseudo-random oscillating metrics.
-/// Suitable for parallel UI development, widget styling, and automated testing.
+/// Провайдер-симулятор телеметрії, що генерує реалістичні псевдовипадкові коливання метрик.
+/// Призначений для паралельної розробки інтерфейсу (UI), стилізації віджетів та автоматизованого тестування.
 /// </summary>
 public sealed class MockTelemetryProvider : ITelemetryProvider
 {
@@ -18,10 +18,10 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
     private readonly DateTimeOffset _startTime = DateTimeOffset.UtcNow;
 
     private const int CoreCount = 8;
-    private const long TotalRamBytes = 32L * 1024 * 1024 * 1024; // 32 GB
+    private const long TotalRamBytes = 32L * 1024 * 1024 * 1024; // 32 ГБ
 
     private double _cpuBaseLoad = 38.0;
-    private long _ramUsedBytes = 12L * 1024 * 1024 * 1024; // ~12 GB
+    private long _ramUsedBytes = 12L * 1024 * 1024 * 1024; // ~12 ГБ
 
     private long _ethRxBytes = 14L * 1024 * 1024 * 1024;
     private long _ethTxBytes = 3L * 1024 * 1024 * 1024;
@@ -31,16 +31,16 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
     private DateTimeOffset _lastUpdate = DateTimeOffset.UtcNow;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="MockTelemetryProvider"/> with an optional random seed.
+    /// Ініціалізує новий екземпляр <see cref="MockTelemetryProvider"/> із можливістю вказати seed для детермінованості.
     /// </summary>
-    /// <param name="seed">Optional seed for deterministic reproducibility in unit tests.</param>
+    /// <param name="seed">Опціональний seed для детермінованого відтворення результатів у тестах.</param>
     public MockTelemetryProvider(int? seed = null)
     {
         _random = seed.HasValue ? new Random(seed.Value) : new Random();
     }
 
     /// <inheritdoc />
-    public string ProviderName => "Mock Telemetry Provider (Simulated)";
+    public string ProviderName => "Симулятор телеметрії (Mock)";
 
     /// <inheritdoc />
     public bool IsSupported => true;
@@ -59,7 +59,7 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
                 Ram = GenerateRamMetricsInternal(),
                 Disk = GenerateDiskMetricsInternal(),
                 Network = GenerateNetworkMetricsInternal(),
-                OsDescription = "Mock OS 1.0 (Simulation Engine)",
+                OsDescription = "Mock OS 1.0 (Симуляційне середовище)",
                 Architecture = "Arm64",
                 MachineName = "MOCK-DEV-RIG",
                 Uptime = DateTimeOffset.UtcNow - _startTime
@@ -148,16 +148,16 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
         var now = DateTimeOffset.UtcNow;
         var elapsedSeconds = Math.Max(0.1, (now - _lastUpdate).TotalSeconds);
 
-        // CPU random walk with mean-reversion towards 40%
+        // Випадкове блукання CPU з поверненням до середнього (mean-reversion) до 40%
         double cpuStep = (_random.NextDouble() - 0.48) * 8.0;
         double cpuMeanPull = (40.0 - _cpuBaseLoad) * 0.08;
         _cpuBaseLoad = Math.Clamp(_cpuBaseLoad + cpuStep + cpuMeanPull, 5.0, 95.0);
 
-        // RAM random fluctuation (+/- 80 MB)
+        // Випадкове коливання RAM (+/- 80 МБ)
         long ramDelta = (long)((_random.NextDouble() - 0.49) * 80 * 1024 * 1024);
         _ramUsedBytes = Math.Clamp(_ramUsedBytes + ramDelta, 4L * 1024 * 1024 * 1024, 28L * 1024 * 1024 * 1024);
 
-        // Advance cumulative network traffic counters
+        // Накопичення лічильників мережевого трафіку
         double ethRxRate = 2_000_000 + _random.NextDouble() * 8_000_000;
         double ethTxRate = 400_000 + _random.NextDouble() * 2_000_000;
         _ethRxBytes += (long)(ethRxRate * elapsedSeconds);
@@ -181,9 +181,9 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
             coreLoads.Add(Math.Round(coreLoad, 1));
         }
 
-        // Realistic temperature correlates with CPU load (42°C idle up to 82°C max load)
+        // Реалістична температура корелює з навантаженням CPU (від 42°C у простої до 82°C при макс. навантаженні)
         double temp = 42.0 + (_cpuBaseLoad * 0.38) + (_random.NextDouble() - 0.5) * 3.0;
-        // Realistic fan speed correlates with temperature (1000 RPM up to 2600 RPM)
+        // Реалістична швидкість вентилятора корелює з навантаженням і температурою (від 1000 RPM до 2600 RPM)
         double fanSpeed = 1000.0 + (_cpuBaseLoad * 15.0) + (_random.NextDouble() - 0.5) * 80.0;
 
         return new CpuMetrics(
@@ -209,17 +209,17 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
 
     private DiskMetrics GenerateDiskMetricsInternal()
     {
-        const long systemDriveTotal = 512L * 1024 * 1024 * 1024;   // 512 GB
-        const long systemDriveFree = 186L * 1024 * 1024 * 1024;    // 186 GB
-        const long dataDriveTotal = 2048L * 1024 * 1024 * 1024;    // 2 TB
-        const long dataDriveFree = 920L * 1024 * 1024 * 1024;      // 920 GB
+        const long systemDriveTotal = 512L * 1024 * 1024 * 1024;   // 512 ГБ
+        const long systemDriveFree = 186L * 1024 * 1024 * 1024;    // 186 ГБ
+        const long dataDriveTotal = 2048L * 1024 * 1024 * 1024;    // 2 ТБ
+        const long dataDriveFree = 920L * 1024 * 1024 * 1024;      // 920 ГБ
 
         var drives = new List<DriveItemMetrics>
         {
             new()
             {
                 Name = "/",
-                VolumeLabel = "System",
+                VolumeLabel = "Системний",
                 RootDirectory = "/",
                 DriveType = "Fixed",
                 DriveFormat = "APFS",
@@ -231,7 +231,7 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
             new()
             {
                 Name = "/Volumes/Data",
-                VolumeLabel = "DataStorage",
+                VolumeLabel = "Дані",
                 RootDirectory = "/Volumes/Data",
                 DriveType = "Fixed",
                 DriveFormat = "APFS",
@@ -258,7 +258,7 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
             {
                 Id = "mock-eth0",
                 Name = "Ethernet",
-                Description = "Virtual Gigabit Network Adapter",
+                Description = "Віртуальний гігабітний мережевий адаптер",
                 InterfaceType = "Ethernet",
                 OperationalStatus = "Up",
                 SpeedBitsPerSecond = 1_000_000_000,
@@ -271,7 +271,7 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
             {
                 Id = "mock-wlan0",
                 Name = "Wi-Fi",
-                Description = "Virtual 802.11ax Wireless Controller",
+                Description = "Віртуальний бездротовий контролер 802.11ax",
                 InterfaceType = "Wireless80211",
                 OperationalStatus = "Up",
                 SpeedBitsPerSecond = 866_000_000,

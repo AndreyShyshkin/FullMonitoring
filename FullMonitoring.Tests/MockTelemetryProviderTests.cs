@@ -16,17 +16,17 @@ public class MockTelemetryProviderTests
         long lastEthRx = 0;
         long lastEthTx = 0;
 
-        // Simulate 10 sequential 1-second ticks (DoD: returns valid data every second without runtime crashes)
+        // Симуляція 10 послідовних щосекундних кроків (DoD: повертає валідні дані щосекунди без падінь у рантаймі)
         for (int i = 0; i < 10; i++)
         {
             var snapshot = provider.GetSnapshot();
 
             Assert.NotNull(snapshot);
-            Assert.Equal("Mock OS 1.0 (Simulation Engine)", snapshot.OsDescription);
+            Assert.Equal("Mock OS 1.0 (Симуляційне середовище)", snapshot.OsDescription);
             Assert.Equal("Arm64", snapshot.Architecture);
             Assert.Equal("MOCK-DEV-RIG", snapshot.MachineName);
 
-            // CPU validation
+            // Перевірка CPU
             Assert.InRange(snapshot.Cpu.TotalUsagePercentage, 0.0, 100.0);
             Assert.Equal(8, snapshot.Cpu.CoreUsagesPercentage.Count);
             foreach (var coreUsage in snapshot.Cpu.CoreUsagesPercentage)
@@ -38,21 +38,21 @@ public class MockTelemetryProviderTests
             Assert.NotNull(snapshot.Cpu.FanSpeedRpm);
             Assert.InRange(snapshot.Cpu.FanSpeedRpm.Value, 500.0, 4000.0);
 
-            // RAM validation
+            // Перевірка RAM
             Assert.True(snapshot.Ram.TotalBytes > 0);
             Assert.True(snapshot.Ram.UsedBytes > 0);
             Assert.True(snapshot.Ram.FreeBytes >= 0);
             Assert.True(snapshot.Ram.UsedBytes <= snapshot.Ram.TotalBytes);
             Assert.InRange(snapshot.Ram.UsedPercentage, 0.0, 100.0);
 
-            // Disk validation
+            // Перевірка накопичувачів
             Assert.NotEmpty(snapshot.Disk.Drives);
             Assert.True(snapshot.Disk.TotalBytes > 0);
             Assert.True(snapshot.Disk.UsedBytes > 0);
             Assert.True(snapshot.Disk.FreeBytes > 0);
             Assert.InRange(snapshot.Disk.OverallUsedPercentage, 0.0, 100.0);
 
-            // Network validation
+            // Перевірка мережі
             Assert.Equal(2, snapshot.Network.Interfaces.Count);
             Assert.True(snapshot.Network.TotalBytesReceived > 0);
             Assert.True(snapshot.Network.TotalBytesSent > 0);
@@ -122,7 +122,7 @@ public class MockTelemetryProviderTests
     {
         using var provider = new MockTelemetryProvider();
 
-        // DoD verification: provider returns valid data every second without runtime crashes
+        // Перевірка DoD: провайдер повертає валідні дані щосекунди без падінь у рантаймі
         for (int i = 0; i < 3; i++)
         {
             await Task.Delay(1000);

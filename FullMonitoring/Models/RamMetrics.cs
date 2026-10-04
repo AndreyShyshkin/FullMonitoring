@@ -3,27 +3,27 @@ using System;
 namespace FullMonitoring.Models;
 
 /// <summary>
-/// Telemetry metrics for Random Access Memory (RAM).
+/// Метрики телеметрії оперативної пам'яті (RAM).
 /// </summary>
 public sealed record RamMetrics
 {
     /// <summary>
-    /// Total physical RAM available to the system in bytes.
+    /// Загальний обсяг фізичної оперативної пам'яті, доступний системі, у байтах.
     /// </summary>
     public long TotalBytes { get; init; }
 
     /// <summary>
-    /// Currently allocated / in-use RAM in bytes.
+    /// Поточний виділений / зайнятий обсяг оперативної пам'яті у байтах.
     /// </summary>
     public long UsedBytes { get; init; }
 
     /// <summary>
-    /// Free / available RAM in bytes.
+    /// Вільний / доступний обсяг оперативної пам'яті у байтах.
     /// </summary>
     public long FreeBytes { get; init; }
 
     /// <summary>
-    /// Percentage of RAM currently in use (0.0 to 100.0).
+    /// Відсоток використання оперативної пам'яті (0.0 до 100.0).
     /// </summary>
     public double UsedPercentage { get; init; }
 

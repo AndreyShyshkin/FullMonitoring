@@ -3,7 +3,7 @@
              x:Class="FullMonitoring.App"
              xmlns:local="using:FullMonitoring"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+             <!-- Тема "Default" успадковує системну тему. Також доступні варіанти "Dark" або "Light". -->
 
     <Application.DataTemplates>
         <local:ViewLocator />

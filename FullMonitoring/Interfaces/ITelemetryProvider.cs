@@ -6,68 +6,68 @@ using FullMonitoring.Models;
 namespace FullMonitoring.Interfaces;
 
 /// <summary>
-/// Core contract for cross-platform telemetry data providers.
-/// Enables decoupled data extraction for UI and background monitoring services.
+/// Базовий контракт для кросплатформних провайдерів телеметрії.
+/// Забезпечує слабку зв'язаність (Decoupling) між інтерфейсом користувача та сервісами системного моніторингу.
 /// </summary>
 public interface ITelemetryProvider : IDisposable
 {
     /// <summary>
-    /// Gets the human-readable provider name and implementation type.
+    /// Отримує назву провайдера та тип його реалізації.
     /// </summary>
     string ProviderName { get; }
 
     /// <summary>
-    /// Indicates whether this telemetry provider is fully supported on the current host OS.
+    /// Вказує, чи підтримується цей провайдер телеметрії поточною операційною системою.
     /// </summary>
     bool IsSupported { get; }
 
     /// <summary>
-    /// Captures a complete snapshot of all system telemetry metrics synchronously.
+    /// Синхронно фіксує повний знімок усіх показників системної телеметрії.
     /// </summary>
     SystemTelemetrySnapshot GetSnapshot();
 
     /// <summary>
-    /// Captures a complete snapshot of all system telemetry metrics asynchronously.
+    /// Асинхронно фіксує повний знімок усіх показників системної телеметрії.
     /// </summary>
     Task<SystemTelemetrySnapshot> GetSnapshotAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves current CPU utilization, frequency, and thermal metrics synchronously.
+    /// Синхронно отримує поточні показники навантаження CPU та температури.
     /// </summary>
     CpuMetrics GetCpuMetrics();
 
     /// <summary>
-    /// Retrieves current CPU utilization, frequency, and thermal metrics asynchronously.
+    /// Асинхронно отримує поточні показники навантаження CPU та температури.
     /// </summary>
     Task<CpuMetrics> GetCpuMetricsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves current RAM metrics synchronously.
+    /// Синхронно отримує поточні показники оперативної пам'яті (RAM).
     /// </summary>
     RamMetrics GetRamMetrics();
 
     /// <summary>
-    /// Retrieves current RAM metrics asynchronously.
+    /// Асинхронно отримує поточні показники оперативної пам'яті (RAM).
     /// </summary>
     Task<RamMetrics> GetRamMetricsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves mounted storage volume metrics synchronously.
+    /// Синхронно отримує метрики змонтованих накопичувачів та файлових систем.
     /// </summary>
     DiskMetrics GetDiskMetrics();
 
     /// <summary>
-    /// Retrieves mounted storage volume metrics asynchronously.
+    /// Асинхронно отримує метрики змонтованих накопичувачів та файлових систем.
     /// </summary>
     Task<DiskMetrics> GetDiskMetricsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Retrieves network interface counters and throughput rates synchronously.
+    /// Синхронно отримує лічильники трафіку та поточну швидкість мережевих інтерфейсів.
     /// </summary>
     NetworkMetrics GetNetworkMetrics();
 
     /// <summary>
-    /// Retrieves network interface counters and throughput rates asynchronously.
+    /// Асинхронно отримує лічильники трафіку та поточну швидкість мережевих інтерфейсів.
     /// </summary>
     Task<NetworkMetrics> GetNetworkMetricsAsync(CancellationToken cancellationToken = default);
 }

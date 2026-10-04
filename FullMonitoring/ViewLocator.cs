@@ -7,10 +7,10 @@ using FullMonitoring.ViewModels;
 namespace FullMonitoring;
 
 /// <summary>
-/// Given a view model, returns the corresponding view if possible.
+/// За заданою моделлю представлення (ViewModel) повертає відповідне представлення (View), якщо це можливо.
 /// </summary>
 [RequiresUnreferencedCode(
-    "Default implementation of ViewLocator involves reflection which may be trimmed away.",
+    "Типова реалізація ViewLocator використовує рефлексію, яка може бути оптимізована компілятором під час тримінгу.",
     Url = "https://docs.avaloniaui.net/docs/concepts/view-locator")]
 public class ViewLocator : IDataTemplate
 {
@@ -27,7 +27,7 @@ public class ViewLocator : IDataTemplate
             return (Control)Activator.CreateInstance(type)!;
         }
 
-        return new TextBlock { Text = "Not Found: " + name };
+        return new TextBlock { Text = "Не знайдено: " + name };
     }
 
     public bool Match(object? data)

@@ -4,88 +4,88 @@ using System.Collections.Generic;
 namespace FullMonitoring.Models;
 
 /// <summary>
-/// Telemetry metrics for an individual network interface.
+/// Метрики телеметрії для окремого мережевого інтерфейсу.
 /// </summary>
 public sealed record NetworkInterfaceMetrics
 {
     /// <summary>
-    /// Interface identifier (e.g., GUID or device name).
+    /// Ідентифікатор інтерфейсу (наприклад, GUID або системна назва пристрою).
     /// </summary>
     public string Id { get; init; } = string.Empty;
 
     /// <summary>
-    /// Friendly interface name (e.g., "eth0", "en0", "Wi-Fi").
+    /// Зручна назва інтерфейсу (наприклад, "eth0", "en0", "Wi-Fi").
     /// </summary>
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    /// Interface hardware or driver description.
+    /// Опис обладнання або драйвера інтерфейсу.
     /// </summary>
     public string Description { get; init; } = string.Empty;
 
     /// <summary>
-    /// Interface type (Ethernet, Wireless80211, Loopback, etc.).
+    /// Тип інтерфейсу (Ethernet, Wireless80211, Loopback тощо).
     /// </summary>
     public string InterfaceType { get; init; } = string.Empty;
 
     /// <summary>
-    /// Operational status (Up, Down, Testing, Unknown, etc.).
+    /// Операційний стан (Up, Down, Testing, Unknown тощо).
     /// </summary>
     public string OperationalStatus { get; init; } = string.Empty;
 
     /// <summary>
-    /// Link speed in bits per second.
+    /// Швидкість з'єднання в бітах за секунду.
     /// </summary>
     public long SpeedBitsPerSecond { get; init; }
 
     /// <summary>
-    /// Total received bytes counter (RX).
+    /// Загальна кількість отриманих байтів (RX).
     /// </summary>
     public long BytesReceived { get; init; }
 
     /// <summary>
-    /// Total transmitted bytes counter (TX).
+    /// Загальна кількість відправлених байтів (TX).
     /// </summary>
     public long BytesSent { get; init; }
 
     /// <summary>
-    /// Current download rate in bytes per second.
+    /// Поточна швидкість завантаження в байтах за секунду.
     /// </summary>
     public double RxSpeedBytesPerSecond { get; init; }
 
     /// <summary>
-    /// Current upload rate in bytes per second.
+    /// Поточна швидкість передачі в байтах за секунду.
     /// </summary>
     public double TxSpeedBytesPerSecond { get; init; }
 }
 
 /// <summary>
-/// Telemetry metrics aggregating system-wide network activity.
+/// Агреговані метрики мережевої активності всієї системи.
 /// </summary>
 public sealed record NetworkMetrics
 {
     /// <summary>
-    /// Collection of detected network interfaces and their current status.
+    /// Колекція виявлених мережевих інтерфейсів та їхній поточний стан.
     /// </summary>
     public IReadOnlyList<NetworkInterfaceMetrics> Interfaces { get; init; } = Array.Empty<NetworkInterfaceMetrics>();
 
     /// <summary>
-    /// Total received bytes across all active interfaces.
+    /// Загальна кількість отриманих байтів по всіх активних інтерфейсах.
     /// </summary>
     public long TotalBytesReceived { get; init; }
 
     /// <summary>
-    /// Total transmitted bytes across all active interfaces.
+    /// Загальна кількість відправлених байтів по всіх активних інтерфейсах.
     /// </summary>
     public long TotalBytesSent { get; init; }
 
     /// <summary>
-    /// Combined download speed across all interfaces in bytes per second.
+    /// Сумарна швидкість завантаження по всіх інтерфейсах у байтах за секунду.
     /// </summary>
     public double RxSpeedBytesPerSecond { get; init; }
 
     /// <summary>
-    /// Combined upload speed across all interfaces in bytes per second.
+    /// Сумарна швидкість відправлення по всіх інтерфейсах у байтах за секунду.
     /// </summary>
     public double TxSpeedBytesPerSecond { get; init; }
 
