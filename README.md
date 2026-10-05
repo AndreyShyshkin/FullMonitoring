@@ -29,7 +29,12 @@
     - `IProcessManagerService` — інтерфейс збору телеметрії та завершення процесів.
     - `ProcessManagerService` — реалізація на базі `System.Diagnostics.Process` (вибірка топ-50 процесів, сортування за спаданням оперативної пам'яті, безпечна обробка системних процесів та метод `KillProcess`).
     - `ProcessItem` — DTO-модель процесу (PID, назва, споживання RAM, кількість потоків, статус).
-4. **UI Layer:** Views та ViewModels не мають прив'язки до поточної ОС. Відображення даних реалізовано через реактивний Data Binding.
+4. **UI Layer:** Views та ViewModels не мають прив'язки до поточної ОС. Відображення даних реалізовано через реактивний Data Binding:
+    - `MainWindow` / `MainViewModel` — адаптивний головний каркас (Sidebar + Dashboard) та навігація між вкладками.
+    - `OverviewView` / `OverviewViewModel` — зведені картки метрик CPU, RAM, Disk, Network.
+    - `ProcessesView` / `ProcessesViewModel` — таблиця активних процесів із пошуком та керуванням.
+    - `SettingsView` / `SettingsViewModel` — налаштування інтервалу опитування та теми оформлення.
+    - `SystemHealthState` / `SystemStatePalette` — фіксована колірна палітра системних станів (нормальний, попередження, критичний).
 
 ---
 
