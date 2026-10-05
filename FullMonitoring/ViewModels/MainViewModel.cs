@@ -116,4 +116,6 @@ public partial class MainViewModel : ViewModelBase
     {
         CurrentViewModel = Settings;
     }
+    [ObservableProperty]
+    private string _greeting = "Ласкаво просимо до FullMonitoring!";
 }
