@@ -4,5 +4,6 @@ namespace FullMonitoring.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    [ObservableProperty] public partial string Greeting { get; set; } = "Ласкаво просимо до FullMonitoring!";
+    [ObservableProperty]
+    private string _greeting = "Ласкаво просимо до FullMonitoring!";
 }
