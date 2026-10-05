@@ -5,6 +5,23 @@
              RequestedThemeVariant="Default">
              <!-- Тема "Default" успадковує системну тему. Також доступні варіанти "Dark" або "Light". -->
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Колірна палітра системних станів: Нормальний / Попередження / Критичний -->
+            <Color x:Key="SystemStateNormalColor">#10B981</Color>
+            <Color x:Key="SystemStateWarningColor">#F59E0B</Color>
+            <Color x:Key="SystemStateCriticalColor">#EF4444</Color>
+
+            <SolidColorBrush x:Key="SystemStateNormalBrush" Color="{StaticResource SystemStateNormalColor}" />
+            <SolidColorBrush x:Key="SystemStateWarningBrush" Color="{StaticResource SystemStateWarningColor}" />
+            <SolidColorBrush x:Key="SystemStateCriticalBrush" Color="{StaticResource SystemStateCriticalColor}" />
+
+            <SolidColorBrush x:Key="SystemStateNormalBackgroundBrush" Color="#1A10B981" />
+            <SolidColorBrush x:Key="SystemStateWarningBackgroundBrush" Color="#1AF59E0B" />
+            <SolidColorBrush x:Key="SystemStateCriticalBackgroundBrush" Color="#1AEF4444" />
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.DataTemplates>
         <local:ViewLocator />
     </Application.DataTemplates>
