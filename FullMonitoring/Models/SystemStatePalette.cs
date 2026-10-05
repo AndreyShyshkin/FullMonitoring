@@ -1,4 +1,5 @@
 using System;
+using Avalonia.Media;
 
 namespace FullMonitoring.Models;
 
@@ -36,6 +37,36 @@ public static class SystemStatePalette
     /// Фоновий напівпрозорий колір для критичного стану.
     /// </summary>
     public const string CriticalBackgroundHex = "#1AEF4444";
+
+    /// <summary>
+    /// Пензель основного кольору для нормального стану.
+    /// </summary>
+    public static IBrush NormalBrush { get; } = Brush.Parse(NormalHex);
+
+    /// <summary>
+    /// Пензель фонового кольору для нормального стану.
+    /// </summary>
+    public static IBrush NormalBackgroundBrush { get; } = Brush.Parse(NormalBackgroundHex);
+
+    /// <summary>
+    /// Пензель основного кольору для стану попередження.
+    /// </summary>
+    public static IBrush WarningBrush { get; } = Brush.Parse(WarningHex);
+
+    /// <summary>
+    /// Пензель фонового кольору для стану попередження.
+    /// </summary>
+    public static IBrush WarningBackgroundBrush { get; } = Brush.Parse(WarningBackgroundHex);
+
+    /// <summary>
+    /// Пензель основного кольору для критичного стану.
+    /// </summary>
+    public static IBrush CriticalBrush { get; } = Brush.Parse(CriticalHex);
+
+    /// <summary>
+    /// Пензель фонового кольору для критичного стану.
+    /// </summary>
+    public static IBrush CriticalBackgroundBrush { get; } = Brush.Parse(CriticalBackgroundHex);
 
     /// <summary>
     /// Поріг попередження за замовчуванням для утилізації ресурсів (%).
@@ -124,6 +155,26 @@ public static class SystemStatePalette
         SystemHealthState.Warning => WarningBackgroundHex,
         SystemHealthState.Critical => CriticalBackgroundHex,
         _ => NormalBackgroundHex
+    };
+
+    /// <summary>
+    /// Повертає пензель основного кольору для заданого стану системи.
+    /// </summary>
+    public static IBrush GetBrush(SystemHealthState state) => state switch
+    {
+        SystemHealthState.Warning => WarningBrush,
+        SystemHealthState.Critical => CriticalBrush,
+        _ => NormalBrush
+    };
+
+    /// <summary>
+    /// Повертає пензель напівпрозорого фону для заданого стану системи.
+    /// </summary>
+    public static IBrush GetBackgroundBrush(SystemHealthState state) => state switch
+    {
+        SystemHealthState.Warning => WarningBackgroundBrush,
+        SystemHealthState.Critical => CriticalBackgroundBrush,
+        _ => NormalBackgroundBrush
     };
 
     /// <summary>

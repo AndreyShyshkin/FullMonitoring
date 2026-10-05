@@ -1,0 +1,406 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.com/markup-compatibility/2006"
+             xmlns:vm="using:FullMonitoring.ViewModels"
+             xmlns:models="using:FullMonitoring.Models"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="620"
+             x:Class="FullMonitoring.Views.OverviewView"
+             x:DataType="vm:OverviewViewModel">
+
+    <Design.DataContext>
+        <vm:OverviewViewModel />
+    </Design.DataContext>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+        <Grid RowDefinitions="Auto,*"
+              RowSpacing="16"
+              Margin="4">
+
+            <!-- Верхня інформаційна панель стану вузла -->
+            <Border Grid.Row="0"
+                    CornerRadius="10"
+                    Padding="16,12"
+                    BorderThickness="1"
+                    BorderBrush="#26808080"
+                    Background="#0D808080">
+                <Grid ColumnDefinitions="*,Auto"
+                      ColumnSpacing="16">
+                    <WrapPanel Grid.Column="0"
+                               Orientation="Horizontal"
+                               VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,20,2">
+                            <TextBlock Text="Вузол:" Opacity="0.65" />
+                            <TextBlock Text="{Binding MachineName}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,20,2">
+                            <TextBlock Text="ОС:" Opacity="0.65" />
+                            <TextBlock Text="{Binding OsDescription}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,20,2">
+                            <TextBlock Text="Архітектура:" Opacity="0.65" />
+                            <TextBlock Text="{Binding Architecture}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,20,2">
+                            <TextBlock Text="Аптайм:" Opacity="0.65" />
+                            <TextBlock Text="{Binding UptimeFormatted}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,2">
+                            <TextBlock Text="Джерело:" Opacity="0.65" />
+                            <TextBlock Text="{Binding ProviderName}" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </WrapPanel>
+
+                    <StackPanel Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="12"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="{Binding LastUpdatedFormatted}"
+                                   VerticalAlignment="Center"
+                                   Opacity="0.7"
+                                   FontSize="12" />
+                        <Button Content="Оновити метрики"
+                                Command="{Binding RefreshMetricsCommand}"
+                                Padding="14,7"
+                                CornerRadius="6" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Адаптивна сітка зведених карток 2x2: CPU, RAM, Disk, Network -->
+            <Grid Grid.Row="1"
+                  RowDefinitions="*,*"
+                  ColumnDefinitions="*,*"
+                  RowSpacing="16"
+                  ColumnSpacing="16">
+
+                <!-- 1. Картка CPU -->
+                <Border Grid.Row="0" Grid.Column="0"
+                        CornerRadius="12"
+                        Padding="18"
+                        BorderThickness="1"
+                        BorderBrush="#26808080"
+                        Background="#0A808080">
+                    <Grid RowDefinitions="Auto,Auto,Auto,*"
+                          RowSpacing="12">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Центральний процесор (CPU)"
+                                           FontSize="16"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Загальне навантаження та термодатчики"
+                                           FontSize="12"
+                                           Opacity="0.65" />
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    CornerRadius="6"
+                                    Padding="10,4"
+                                    VerticalAlignment="Top"
+                                    Background="{Binding CpuStateBackgroundBrush}"
+                                    BorderBrush="{Binding CpuStateBrush}"
+                                    BorderThickness="1">
+                                <TextBlock Text="{Binding CpuStateLabel}"
+                                           Foreground="{Binding CpuStateBrush}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding CpuUsageFormatted}"
+                                       FontSize="28"
+                                       FontWeight="Bold"
+                                       Foreground="{Binding CpuStateBrush}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding CpuCoreCount, StringFormat='Логічних ядер: {0}'}"
+                                       VerticalAlignment="Bottom"
+                                       Opacity="0.75" />
+                        </Grid>
+
+                        <ProgressBar Grid.Row="2"
+                                     Minimum="0"
+                                     Maximum="100"
+                                     Value="{Binding CpuUsagePercentage}"
+                                     Foreground="{Binding CpuStateBrush}"
+                                     CornerRadius="4" />
+
+                        <Grid Grid.Row="3"
+                              ColumnDefinitions="*,*"
+                              ColumnSpacing="12"
+                              VerticalAlignment="Bottom">
+                            <Border Grid.Column="0"
+                                    CornerRadius="8"
+                                    Padding="10,8"
+                                    Background="#0D808080">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Температура CPU" FontSize="11" Opacity="0.65" />
+                                    <TextBlock Text="{Binding CpuTemperatureFormatted}" FontSize="15" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1"
+                                    CornerRadius="8"
+                                    Padding="10,8"
+                                    Background="#0D808080">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Оберти кулера" FontSize="11" Opacity="0.65" />
+                                    <TextBlock Text="{Binding CpuFanSpeedFormatted}" FontSize="15" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- 2. Картка RAM -->
+                <Border Grid.Row="0" Grid.Column="1"
+                        CornerRadius="12"
+                        Padding="18"
+                        BorderThickness="1"
+                        BorderBrush="#26808080"
+                        Background="#0A808080">
+                    <Grid RowDefinitions="Auto,Auto,Auto,*"
+                          RowSpacing="12">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Оперативна пам'ять (RAM)"
+                                           FontSize="16"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Розподіл фізичної пам'яті системи"
+                                           FontSize="12"
+                                           Opacity="0.65" />
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    CornerRadius="6"
+                                    Padding="10,4"
+                                    VerticalAlignment="Top"
+                                    Background="{Binding RamStateBackgroundBrush}"
+                                    BorderBrush="{Binding RamStateBrush}"
+                                    BorderThickness="1">
+                                <TextBlock Text="{Binding RamStateLabel}"
+                                           Foreground="{Binding RamStateBrush}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding RamUsageFormatted}"
+                                       FontSize="28"
+                                       FontWeight="Bold"
+                                       Foreground="{Binding RamStateBrush}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding RamTotalFormatted, StringFormat='Всього: {0}'}"
+                                       VerticalAlignment="Bottom"
+                                       Opacity="0.75" />
+                        </Grid>
+
+                        <ProgressBar Grid.Row="2"
+                                     Minimum="0"
+                                     Maximum="100"
+                                     Value="{Binding RamUsagePercentage}"
+                                     Foreground="{Binding RamStateBrush}"
+                                     CornerRadius="4" />
+
+                        <Grid Grid.Row="3"
+                              ColumnDefinitions="*,*"
+                              ColumnSpacing="12"
+                              VerticalAlignment="Bottom">
+                            <Border Grid.Column="0"
+                                    CornerRadius="8"
+                                    Padding="10,8"
+                                    Background="#0D808080">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Використано" FontSize="11" Opacity="0.65" />
+                                    <TextBlock Text="{Binding RamUsedFormatted}" FontSize="15" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1"
+                                    CornerRadius="8"
+                                    Padding="10,8"
+                                    Background="#0D808080">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="Вільно" FontSize="11" Opacity="0.65" />
+                                    <TextBlock Text="{Binding RamFreeFormatted}" FontSize="15" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- 3. Картка Disk -->
+                <Border Grid.Row="1" Grid.Column="0"
+                        CornerRadius="12"
+                        Padding="18"
+                        BorderThickness="1"
+                        BorderBrush="#26808080"
+                        Background="#0A808080">
+                    <Grid RowDefinitions="Auto,Auto,Auto,*"
+                          RowSpacing="12">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Дискова підсистема (Disk)"
+                                           FontSize="16"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Стан змонтованих накопичувачів та томів"
+                                           FontSize="12"
+                                           Opacity="0.65" />
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    CornerRadius="6"
+                                    Padding="10,4"
+                                    VerticalAlignment="Top"
+                                    Background="{Binding DiskStateBackgroundBrush}"
+                                    BorderBrush="{Binding DiskStateBrush}"
+                                    BorderThickness="1">
+                                <TextBlock Text="{Binding DiskStateLabel}"
+                                           Foreground="{Binding DiskStateBrush}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding DiskUsageFormatted}"
+                                       FontSize="28"
+                                       FontWeight="Bold"
+                                       Foreground="{Binding DiskStateBrush}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding ActiveDrivesCount, StringFormat='Активних томів: {0}'}"
+                                       VerticalAlignment="Bottom"
+                                       Opacity="0.75" />
+                        </Grid>
+
+                        <ProgressBar Grid.Row="2"
+                                     Minimum="0"
+                                     Maximum="100"
+                                     Value="{Binding DiskUsagePercentage}"
+                                     Foreground="{Binding DiskStateBrush}"
+                                     CornerRadius="4" />
+
+                        <Grid Grid.Row="3" RowDefinitions="Auto,*" RowSpacing="8">
+                            <Grid Grid.Row="0" ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                <TextBlock Grid.Column="0" Text="{Binding DiskUsedFormatted, StringFormat='Зайнято: {0}'}" FontSize="12" Opacity="0.8" />
+                                <TextBlock Grid.Column="1" Text="{Binding DiskFreeFormatted, StringFormat='Вільно: {0}'}" FontSize="12" Opacity="0.8" />
+                                <TextBlock Grid.Column="2" Text="{Binding DiskTotalFormatted, StringFormat='Обсяг: {0}'}" FontSize="12" Opacity="0.8" HorizontalAlignment="Right" />
+                            </Grid>
+
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding Drives}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:DriveItemMetrics">
+                                        <Border CornerRadius="6"
+                                                Padding="8,5"
+                                                Margin="0,2"
+                                                Background="#0D808080">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Column="1" Text="{Binding DriveFormat, StringFormat='({0})'}" Opacity="0.65" />
+                                                <TextBlock Grid.Column="2" Text="{Binding UsedPercentage, StringFormat='{}{0:F1} %'}" FontWeight="SemiBold" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- 4. Картка Network -->
+                <Border Grid.Row="1" Grid.Column="1"
+                        CornerRadius="12"
+                        Padding="18"
+                        BorderThickness="1"
+                        BorderBrush="#26808080"
+                        Background="#0A808080">
+                    <Grid RowDefinitions="Auto,Auto,*"
+                          RowSpacing="12">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Мережеві інтерфейси (Network)"
+                                           FontSize="16"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Поточна пропускна здатність та трафік RX/TX"
+                                           FontSize="12"
+                                           Opacity="0.65" />
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    CornerRadius="6"
+                                    Padding="10,4"
+                                    VerticalAlignment="Top"
+                                    Background="{Binding NetworkStateBackgroundBrush}"
+                                    BorderBrush="{Binding NetworkStateBrush}"
+                                    BorderThickness="1">
+                                <TextBlock Text="{Binding NetworkStateLabel}"
+                                           Foreground="{Binding NetworkStateBrush}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1"
+                              ColumnDefinitions="*,*"
+                              ColumnSpacing="12">
+                            <Border Grid.Column="0"
+                                    CornerRadius="8"
+                                    Padding="12,10"
+                                    Background="#0D808080">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="Приймання (RX)" FontSize="11" Opacity="0.65" />
+                                    <TextBlock Text="{Binding NetworkRxSpeedFormatted}"
+                                               FontSize="20"
+                                               FontWeight="Bold"
+                                               Foreground="{Binding NetworkStateBrush}" />
+                                    <TextBlock Text="{Binding NetworkTotalRxFormatted, StringFormat='Всього: {0}'}"
+                                               FontSize="11"
+                                               Opacity="0.7" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1"
+                                    CornerRadius="8"
+                                    Padding="12,10"
+                                    Background="#0D808080">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="Відправлення (TX)" FontSize="11" Opacity="0.65" />
+                                    <TextBlock Text="{Binding NetworkTxSpeedFormatted}"
+                                               FontSize="20"
+                                               FontWeight="Bold" />
+                                    <TextBlock Text="{Binding NetworkTotalTxFormatted, StringFormat='Всього: {0}'}"
+                                               FontSize="11"
+                                               Opacity="0.7" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="6">
+                            <TextBlock Grid.Row="0"
+                                       Text="{Binding ActiveInterfacesCount, StringFormat='Мережеві адаптери ({0}):'}"
+                                       FontSize="12"
+                                       Opacity="0.75" />
+
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding NetworkInterfaces}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:NetworkInterfaceMetrics">
+                                        <Border CornerRadius="6"
+                                                Padding="8,5"
+                                                Margin="0,2"
+                                                Background="#0D808080">
+                                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="1" Text="{Binding InterfaceType}" Opacity="0.65" FontSize="12" />
+                                                <TextBlock Grid.Column="2" Text="{Binding OperationalStatus}" FontWeight="SemiBold" FontSize="12" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
