@@ -1,0 +1,216 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.com/markup-compatibility/2006"
+             xmlns:vm="using:FullMonitoring.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="620"
+             x:Class="FullMonitoring.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <Design.DataContext>
+        <vm:SettingsViewModel />
+    </Design.DataContext>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+              RowSpacing="16"
+              Margin="4">
+
+            <!-- 1. Налаштування інтервалу опитування телеметрії -->
+            <Border Grid.Row="0"
+                    CornerRadius="12"
+                    Padding="20"
+                    BorderThickness="1"
+                    BorderBrush="#26808080"
+                    Background="#0A808080">
+                <Grid RowDefinitions="Auto,Auto,Auto"
+                      RowSpacing="14">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Інтервал опитування сенсорів"
+                                       FontSize="16"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="Визначає частоту оновлення показників CPU, RAM, дискової підсистеми та мережі"
+                                       FontSize="12"
+                                       Opacity="0.65" />
+                        </StackPanel>
+                        <Border Grid.Column="1"
+                                CornerRadius="6"
+                                Padding="12,6"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource SystemStateNormalBackgroundBrush}"
+                                BorderBrush="{StaticResource SystemStateNormalBrush}"
+                                BorderThickness="1">
+                            <TextBlock Text="{Binding PollingIntervalFormatted}"
+                                       Foreground="{StaticResource SystemStateNormalBrush}"
+                                       FontWeight="Bold" />
+                        </Border>
+                    </Grid>
+
+                    <Slider Grid.Row="1"
+                            Minimum="250"
+                            Maximum="10000"
+                            TickFrequency="250"
+                            IsSnapToTickEnabled="True"
+                            Value="{Binding PollingIntervalMs}" />
+
+                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <TextBlock Grid.Column="0"
+                                   Text="Швидкий вибір інтервалу (мс):"
+                                   VerticalAlignment="Center"
+                                   Opacity="0.75" />
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding AvailablePollingIntervalsMs}"
+                                  SelectedItem="{Binding PollingIntervalMs}"
+                                  HorizontalAlignment="Left" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- 2. Налаштування теми оформлення (Світла / Темна / Системна) -->
+            <Border Grid.Row="1"
+                    CornerRadius="12"
+                    Padding="20"
+                    BorderThickness="1"
+                    BorderBrush="#26808080"
+                    Background="#0A808080">
+                <Grid RowDefinitions="Auto,Auto"
+                      RowSpacing="14">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Тема оформлення інтерфейсу"
+                                       FontSize="16"
+                                       FontWeight="Bold" />
+                            <TextBlock Text="Перемикання між світлою, темною та системною кольоровою схемою застосунку"
+                                       FontSize="12"
+                                       Opacity="0.65" />
+                        </StackPanel>
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding AvailableThemes}"
+                                  SelectedItem="{Binding SelectedTheme}"
+                                  VerticalAlignment="Center" />
+                    </Grid>
+
+                    <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                        <Button Content="Світла тема"
+                                Command="{Binding SetLightThemeCommand}"
+                                Padding="14,8"
+                                Margin="0,0,10,6"
+                                CornerRadius="6" />
+                        <Button Content="Темна тема"
+                                Command="{Binding SetDarkThemeCommand}"
+                                Padding="14,8"
+                                Margin="0,0,10,6"
+                                CornerRadius="6" />
+                        <Button Content="Системна тема"
+                                Command="{Binding SetSystemThemeCommand}"
+                                Padding="14,8"
+                                Margin="0,0,0,6"
+                                CornerRadius="6" />
+                    </WrapPanel>
+                </Grid>
+            </Border>
+
+            <!-- 3. Довідник колірної палітри системних станів -->
+            <Border Grid.Row="2"
+                    CornerRadius="12"
+                    Padding="20"
+                    BorderThickness="1"
+                    BorderBrush="#26808080"
+                    Background="#0A808080">
+                <Grid RowDefinitions="Auto,Auto"
+                      RowSpacing="14">
+                    <StackPanel Grid.Row="0" Spacing="4">
+                        <TextBlock Text="Колірна палітра системних станів"
+                                   FontSize="16"
+                                   FontWeight="Bold" />
+                        <TextBlock Text="Уніфікована індикація стану навантаження та температур вузлів системи"
+                                   FontSize="12"
+                                   Opacity="0.65" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*,*,*"
+                          ColumnSpacing="12">
+                        <!-- Нормальний стан -->
+                        <Border Grid.Column="0"
+                                CornerRadius="8"
+                                Padding="14,12"
+                                Background="{StaticResource SystemStateNormalBackgroundBrush}"
+                                BorderBrush="{StaticResource SystemStateNormalBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Нормальний (#10B981)"
+                                           Foreground="{StaticResource SystemStateNormalBrush}"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Навантаження &lt; 70% або температура &lt; 70 °C"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.85" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Попередження -->
+                        <Border Grid.Column="1"
+                                CornerRadius="8"
+                                Padding="14,12"
+                                Background="{StaticResource SystemStateWarningBackgroundBrush}"
+                                BorderBrush="{StaticResource SystemStateWarningBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Попередження (#F59E0B)"
+                                           Foreground="{StaticResource SystemStateWarningBrush}"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Навантаження 70–89% або температура 70–84 °C"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.85" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Критичний стан -->
+                        <Border Grid.Column="2"
+                                CornerRadius="8"
+                                Padding="14,12"
+                                Background="{StaticResource SystemStateCriticalBackgroundBrush}"
+                                BorderBrush="{StaticResource SystemStateCriticalBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Критичний (#EF4444)"
+                                           Foreground="{StaticResource SystemStateCriticalBrush}"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="Навантаження ≥ 90% або температура ≥ 85 °C"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Opacity="0.85" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- 4. Нижня панель статусу та скидання налаштувань -->
+            <Border Grid.Row="3"
+                    CornerRadius="10"
+                    Padding="16,12"
+                    BorderThickness="1"
+                    BorderBrush="#26808080"
+                    Background="#0D808080">
+                <Grid ColumnDefinitions="*,Auto"
+                      ColumnSpacing="12">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding StatusMessage}"
+                               VerticalAlignment="Center"
+                               Opacity="0.8" />
+                    <Button Grid.Column="1"
+                            Content="Скинути за замовчуванням"
+                            Command="{Binding ResetDefaultsCommand}"
+                            Padding="14,7"
+                            CornerRadius="6" />
+                </Grid>
+            </Border>
+
+        </Grid>
+    </ScrollViewer>
+</UserControl>
