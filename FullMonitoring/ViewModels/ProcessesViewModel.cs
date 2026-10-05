@@ -25,19 +25,19 @@ public partial class ProcessesViewModel : ViewModelBase
     public ObservableCollection<ProcessItem> Processes { get; } = new();
 
     [ObservableProperty]
-    public partial ProcessItem? SelectedProcess { get; set; }
+    private ProcessItem? _selectedProcess;
 
     [ObservableProperty]
-    public partial string SearchQuery { get; set; } = string.Empty;
+    private string _searchQuery = string.Empty;
 
     [ObservableProperty]
-    public partial int TotalProcessesCount { get; set; }
+    private int _totalProcessesCount;
 
     [ObservableProperty]
-    public partial string TotalRamUsageFormatted { get; set; } = "0.00 МБ";
+    private string _totalRamUsageFormatted = "0.00 МБ";
 
     [ObservableProperty]
-    public partial string StatusMessage { get; set; } = string.Empty;
+    private string _statusMessage = string.Empty;
 
     /// <summary>
     /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> зі стандартним сервісом процесів.

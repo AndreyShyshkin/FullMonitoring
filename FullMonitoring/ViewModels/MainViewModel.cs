@@ -26,23 +26,23 @@ public partial class MainViewModel : ViewModelBase
     public SettingsViewModel Settings { get; }
 
     [ObservableProperty]
-    public partial ViewModelBase CurrentViewModel { get; set; }
+    private ViewModelBase _currentViewModel;
 
     [ObservableProperty]
-    public partial string CurrentSectionTitle { get; set; } = "Огляд системи";
+    private string _currentSectionTitle = "Огляд системи";
 
     [ObservableProperty]
-    public partial string CurrentSectionSubtitle { get; set; } =
+    private string _currentSectionSubtitle =
         "Зведені показники навантаження CPU, RAM, дискової підсистеми та мережі";
 
     [ObservableProperty]
-    public partial bool IsOverviewSelected { get; set; } = true;
+    private bool _isOverviewSelected = true;
 
     [ObservableProperty]
-    public partial bool IsProcessesSelected { get; set; }
+    private bool _isProcessesSelected;
 
     [ObservableProperty]
-    public partial bool IsSettingsSelected { get; set; }
+    private bool _isSettingsSelected;
 
     /// <summary>
     /// Ініціалізує новий екземпляр <see cref="MainViewModel"/> зі стандартними дочірніми ViewModels.
@@ -64,7 +64,7 @@ public partial class MainViewModel : ViewModelBase
         Processes = processes ?? throw new ArgumentNullException(nameof(processes));
         Settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-        CurrentViewModel = Overview;
+        _currentViewModel = Overview;
     }
 
     partial void OnCurrentViewModelChanged(ViewModelBase value)

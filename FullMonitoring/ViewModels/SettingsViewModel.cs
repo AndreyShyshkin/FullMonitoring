@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Avalonia;
-using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace FullMonitoring.ViewModels;
 
 /// <summary>
-/// Модель представлення для вкладки налаштувань застосунку (інтервал опитування та тема оформлення).
+/// Модель представлення для вкладки налаштувань застосунку (інтервал опитування та вибір теми оформлення).
 /// </summary>
 public partial class SettingsViewModel : ViewModelBase
 {
@@ -39,19 +37,19 @@ public partial class SettingsViewModel : ViewModelBase
     public IReadOnlyList<string> AvailableThemes { get; } = new[] { "Системна", "Світла", "Темна" };
 
     [ObservableProperty]
-    public partial int PollingIntervalMs { get; set; } = DefaultPollingIntervalMs;
+    private int _pollingIntervalMs = DefaultPollingIntervalMs;
 
     [ObservableProperty]
-    public partial string PollingIntervalFormatted { get; set; } = "1000 мс (1.0 с)";
+    private string _pollingIntervalFormatted = "1000 мс (1.0 с)";
 
     [ObservableProperty]
-    public partial string SelectedTheme { get; set; } = "Системна";
+    private string _selectedTheme = "Системна";
 
     [ObservableProperty]
-    public partial bool IsDarkThemeEnabled { get; set; }
+    private bool _isDarkThemeEnabled;
 
     [ObservableProperty]
-    public partial string StatusMessage { get; set; } = "Налаштування за замовчуванням активні.";
+    private string _statusMessage = "Налаштування за замовчуванням активні.";
 
     partial void OnPollingIntervalMsChanged(int value)
     {
@@ -70,7 +68,6 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnSelectedThemeChanged(string value)
     {
         IsDarkThemeEnabled = string.Equals(value, "Темна", StringComparison.OrdinalIgnoreCase);
-        ApplyThemeVariant(value);
         StatusMessage = $"Обрано тему оформлення: {value}.";
     }
 
@@ -119,21 +116,6 @@ public partial class SettingsViewModel : ViewModelBase
     {
         PollingIntervalMs = DefaultPollingIntervalMs;
         SelectedTheme = "Системна";
-        StatusMessage = "Усі налаштування повернуто до значень за замовчуванням.";
-    }
-
-    private static void ApplyThemeVariant(string themeName)
-    {
-        if (Application.Current is null)
-        {
-            return;
-        }
-
-        Application.Current.RequestedThemeVariant = themeName switch
-        {
-            "Світла" => ThemeVariant.Light,
-            "Темна" => ThemeVariant.Dark,
-            _ => ThemeVariant.Default
-        };
+        StatusMessage = "Усі налаштування повернуто до значень замовчуванням.";
     }
 }

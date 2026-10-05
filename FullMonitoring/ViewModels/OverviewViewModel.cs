@@ -20,112 +20,112 @@ public partial class OverviewViewModel : ViewModelBase
     private readonly ITelemetryProvider _telemetryProvider;
 
     [ObservableProperty]
-    public partial string ProviderName { get; set; } = string.Empty;
+    private string _providerName = string.Empty;
 
     [ObservableProperty]
-    public partial string OsDescription { get; set; } = string.Empty;
+    private string _osDescription = string.Empty;
 
     [ObservableProperty]
-    public partial string Architecture { get; set; } = string.Empty;
+    private string _architecture = string.Empty;
 
     [ObservableProperty]
-    public partial string MachineName { get; set; } = string.Empty;
+    private string _machineName = string.Empty;
 
     [ObservableProperty]
-    public partial string UptimeFormatted { get; set; } = string.Empty;
+    private string _uptimeFormatted = string.Empty;
 
     [ObservableProperty]
-    public partial string LastUpdatedFormatted { get; set; } = string.Empty;
+    private string _lastUpdatedFormatted = string.Empty;
 
     // --- Показники CPU ---
 
     [ObservableProperty]
-    public partial double CpuUsagePercentage { get; set; }
+    private double _cpuUsagePercentage;
 
     [ObservableProperty]
-    public partial string CpuUsageFormatted { get; set; } = "0.0 %";
+    private string _cpuUsageFormatted = "0.0 %";
 
     [ObservableProperty]
-    public partial int CpuCoreCount { get; set; }
+    private int _cpuCoreCount;
 
     [ObservableProperty]
-    public partial string CpuTemperatureFormatted { get; set; } = "Н/Д";
+    private string _cpuTemperatureFormatted = "Н/Д";
 
     [ObservableProperty]
-    public partial string CpuFanSpeedFormatted { get; set; } = "Н/Д";
+    private string _cpuFanSpeedFormatted = "Н/Д";
 
     [ObservableProperty]
-    public partial SystemHealthState CpuState { get; set; } = SystemHealthState.Normal;
+    private SystemHealthState _cpuState = SystemHealthState.Normal;
 
     [ObservableProperty]
-    public partial string CpuStateLabel { get; set; } = SystemStatePalette.GetDisplayName(SystemHealthState.Normal);
+    private string _cpuStateLabel = SystemStatePalette.GetDisplayName(SystemHealthState.Normal);
 
     [ObservableProperty]
-    public partial IBrush CpuStateBrush { get; set; } = SystemStatePalette.NormalBrush;
+    private IBrush _cpuStateBrush = SystemStatePalette.NormalBrush;
 
     [ObservableProperty]
-    public partial IBrush CpuStateBackgroundBrush { get; set; } = SystemStatePalette.NormalBackgroundBrush;
+    private IBrush _cpuStateBackgroundBrush = SystemStatePalette.NormalBackgroundBrush;
 
     // --- Показники RAM ---
 
     [ObservableProperty]
-    public partial double RamUsagePercentage { get; set; }
+    private double _ramUsagePercentage;
 
     [ObservableProperty]
-    public partial string RamUsageFormatted { get; set; } = "0.0 %";
+    private string _ramUsageFormatted = "0.0 %";
 
     [ObservableProperty]
-    public partial string RamUsedFormatted { get; set; } = "0.00 ГБ";
+    private string _ramUsedFormatted = "0.00 ГБ";
 
     [ObservableProperty]
-    public partial string RamFreeFormatted { get; set; } = "0.00 ГБ";
+    private string _ramFreeFormatted = "0.00 ГБ";
 
     [ObservableProperty]
-    public partial string RamTotalFormatted { get; set; } = "0.00 ГБ";
+    private string _ramTotalFormatted = "0.00 ГБ";
 
     [ObservableProperty]
-    public partial SystemHealthState RamState { get; set; } = SystemHealthState.Normal;
+    private SystemHealthState _ramState = SystemHealthState.Normal;
 
     [ObservableProperty]
-    public partial string RamStateLabel { get; set; } = SystemStatePalette.GetDisplayName(SystemHealthState.Normal);
+    private string _ramStateLabel = SystemStatePalette.GetDisplayName(SystemHealthState.Normal);
 
     [ObservableProperty]
-    public partial IBrush RamStateBrush { get; set; } = SystemStatePalette.NormalBrush;
+    private IBrush _ramStateBrush = SystemStatePalette.NormalBrush;
 
     [ObservableProperty]
-    public partial IBrush RamStateBackgroundBrush { get; set; } = SystemStatePalette.NormalBackgroundBrush;
+    private IBrush _ramStateBackgroundBrush = SystemStatePalette.NormalBackgroundBrush;
 
     // --- Показники Disk ---
 
     [ObservableProperty]
-    public partial double DiskUsagePercentage { get; set; }
+    private double _diskUsagePercentage;
 
     [ObservableProperty]
-    public partial string DiskUsageFormatted { get; set; } = "0.0 %";
+    private string _diskUsageFormatted = "0.0 %";
 
     [ObservableProperty]
-    public partial string DiskUsedFormatted { get; set; } = "0.00 ГБ";
+    private string _diskUsedFormatted = "0.00 ГБ";
 
     [ObservableProperty]
-    public partial string DiskFreeFormatted { get; set; } = "0.00 ГБ";
+    private string _diskFreeFormatted = "0.00 ГБ";
 
     [ObservableProperty]
-    public partial string DiskTotalFormatted { get; set; } = "0.00 ГБ";
+    private string _diskTotalFormatted = "0.00 ГБ";
 
     [ObservableProperty]
-    public partial int ActiveDrivesCount { get; set; }
+    private int _activeDrivesCount;
 
     [ObservableProperty]
-    public partial SystemHealthState DiskState { get; set; } = SystemHealthState.Normal;
+    private SystemHealthState _diskState = SystemHealthState.Normal;
 
     [ObservableProperty]
-    public partial string DiskStateLabel { get; set; } = SystemStatePalette.GetDisplayName(SystemHealthState.Normal);
+    private string _diskStateLabel = SystemStatePalette.GetDisplayName(SystemHealthState.Normal);
 
     [ObservableProperty]
-    public partial IBrush DiskStateBrush { get; set; } = SystemStatePalette.NormalBrush;
+    private IBrush _diskStateBrush = SystemStatePalette.NormalBrush;
 
     [ObservableProperty]
-    public partial IBrush DiskStateBackgroundBrush { get; set; } = SystemStatePalette.NormalBackgroundBrush;
+    private IBrush _diskStateBackgroundBrush = SystemStatePalette.NormalBackgroundBrush;
 
     /// <summary>
     /// Перелік активних накопичувачів для відображення в картці Disk.
@@ -135,31 +135,31 @@ public partial class OverviewViewModel : ViewModelBase
     // --- Показники Network ---
 
     [ObservableProperty]
-    public partial string NetworkRxSpeedFormatted { get; set; } = "0.0 КБ/с";
+    private string _networkRxSpeedFormatted = "0.0 КБ/с";
 
     [ObservableProperty]
-    public partial string NetworkTxSpeedFormatted { get; set; } = "0.0 КБ/с";
+    private string _networkTxSpeedFormatted = "0.0 КБ/с";
 
     [ObservableProperty]
-    public partial string NetworkTotalRxFormatted { get; set; } = "0.00 ГБ";
+    private string _networkTotalRxFormatted = "0.00 ГБ";
 
     [ObservableProperty]
-    public partial string NetworkTotalTxFormatted { get; set; } = "0.00 ГБ";
+    private string _networkTotalTxFormatted = "0.00 ГБ";
 
     [ObservableProperty]
-    public partial int ActiveInterfacesCount { get; set; }
+    private int _activeInterfacesCount;
 
     [ObservableProperty]
-    public partial SystemHealthState NetworkState { get; set; } = SystemHealthState.Normal;
+    private SystemHealthState _networkState = SystemHealthState.Normal;
 
     [ObservableProperty]
-    public partial string NetworkStateLabel { get; set; } = SystemStatePalette.GetDisplayName(SystemHealthState.Normal);
+    private string _networkStateLabel = SystemStatePalette.GetDisplayName(SystemHealthState.Normal);
 
     [ObservableProperty]
-    public partial IBrush NetworkStateBrush { get; set; } = SystemStatePalette.NormalBrush;
+    private IBrush _networkStateBrush = SystemStatePalette.NormalBrush;
 
     [ObservableProperty]
-    public partial IBrush NetworkStateBackgroundBrush { get; set; } = SystemStatePalette.NormalBackgroundBrush;
+    private IBrush _networkStateBackgroundBrush = SystemStatePalette.NormalBackgroundBrush;
 
     /// <summary>
     /// Перелік мережевих інтерфейсів для відображення в картці Network.
