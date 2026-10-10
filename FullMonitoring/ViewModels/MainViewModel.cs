@@ -25,6 +25,11 @@ public partial class MainViewModel : ViewModelBase
     /// </summary>
     public SettingsViewModel Settings { get; }
 
+    /// <summary>
+    /// Модель представлення вкладки журналу подій та сповіщень.
+    /// </summary>
+    public EventsLogViewModel EventsLog { get; }
+
     [ObservableProperty]
     private ViewModelBase _currentViewModel;
 
@@ -44,11 +49,14 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isSettingsSelected;
 
+    [ObservableProperty]
+    private bool _isEventsLogSelected;
+
     /// <summary>
     /// Ініціалізує новий екземпляр <see cref="MainViewModel"/> зі стандартними дочірніми ViewModels.
     /// </summary>
     public MainViewModel()
-        : this(new OverviewViewModel(), new ProcessesViewModel(), new SettingsViewModel())
+        : this(new OverviewViewModel(), new ProcessesViewModel(), new SettingsViewModel(), new EventsLogViewModel())
     {
     }
 
@@ -58,11 +66,13 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel(
         OverviewViewModel overview,
         ProcessesViewModel processes,
-        SettingsViewModel settings)
+        SettingsViewModel settings,
+        EventsLogViewModel? eventsLog = null)
     {
         Overview = overview ?? throw new ArgumentNullException(nameof(overview));
         Processes = processes ?? throw new ArgumentNullException(nameof(processes));
         Settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        EventsLog = eventsLog ?? new EventsLogViewModel();
 
         _currentViewModel = Overview;
     }
@@ -72,6 +82,7 @@ public partial class MainViewModel : ViewModelBase
         IsOverviewSelected = ReferenceEquals(value, Overview);
         IsProcessesSelected = ReferenceEquals(value, Processes);
         IsSettingsSelected = ReferenceEquals(value, Settings);
+        IsEventsLogSelected = ReferenceEquals(value, EventsLog);
 
         if (IsOverviewSelected)
         {
@@ -87,6 +98,11 @@ public partial class MainViewModel : ViewModelBase
         {
             CurrentSectionTitle = "Налаштування";
             CurrentSectionSubtitle = "Конфігурація інтервалу опитування сенсорів та кольорової теми інтерфейсу";
+        }
+        else if (IsEventsLogSelected)
+        {
+            CurrentSectionTitle = "Журнал інцидентів";
+            CurrentSectionSubtitle = "Історія подій перевищення порогів навантаження та температури апаратного забезпечення";
         }
     }
 
@@ -115,6 +131,15 @@ public partial class MainViewModel : ViewModelBase
     public void NavigateToSettings()
     {
         CurrentViewModel = Settings;
+    }
+
+    /// <summary>
+    /// Перемикає активну вкладку робочої області на «Журнал інцидентів».
+    /// </summary>
+    [RelayCommand]
+    public void NavigateToEventsLog()
+    {
+        CurrentViewModel = EventsLog;
     }
     [ObservableProperty]
     private string _greeting = "Ласкаво просимо до FullMonitoring!";

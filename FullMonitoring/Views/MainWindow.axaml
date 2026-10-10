@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:FullMonitoring.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -55,6 +55,14 @@
 
                     <Button Content="Процеси ОС"
                             Command="{Binding NavigateToProcessesCommand}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            FontWeight="SemiBold" />
+
+                    <Button Content="Журнал подій"
+                            Command="{Binding NavigateToEventsLogCommand}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
                             Padding="14,10"
