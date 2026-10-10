@@ -61,6 +61,34 @@ public interface IAlertService : IDisposable
     void ClearEventLog();
 
     /// <summary>
+    /// Отримує відфільтрований список інцидентів за типом метрики.
+    /// </summary>
+    /// <param name="metricType">Тип метрики.</param>
+    IReadOnlyList<AlertIncident> GetIncidentsByMetric(AlertMetricType metricType);
+
+    /// <summary>
+    /// Отримує останні N інцидентів із журналу подій у зворотному хронологічному порядку.
+    /// </summary>
+    /// <param name="maxCount">Максимальна кількість записів.</param>
+    IReadOnlyList<AlertIncident> GetRecentIncidents(int maxCount);
+
+    /// <summary>
+    /// Перевіряє, чи перебуває вказана метрика у стані активного перевантаження в поточний момент.
+    /// </summary>
+    /// <param name="metricType">Тип метрики.</param>
+    bool HasActiveOverload(AlertMetricType metricType);
+
+    /// <summary>
+    /// Кількість метрик, які перебувають у стані активного перевантаження в поточний момент.
+    /// </summary>
+    int ActiveOverloadCount { get; }
+
+    /// <summary>
+    /// Максимальна кількість записів у журналі подій (для запобігання переповненню пам'яті).
+    /// </summary>
+    int MaxLogCapacity { get; set; }
+
+    /// <summary>
     /// Запускає фоновий моніторинг телеметрії (якщо налаштовано провайдер телеметрії).
     /// </summary>
     void Start();

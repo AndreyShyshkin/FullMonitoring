@@ -126,6 +126,112 @@ public class AlertService : IAlertService
         }
     }
 
+    private int _maxLogCapacity = 500;
+
+    /// <summary>
+    /// Максимальна кількість записів у журналі подій (за замовчуванням 500).
+    /// </summary>
+    public int MaxLogCapacity
+    {
+        get
+        {
+            lock (_syncLock)
+            {
+                return _maxLogCapacity;
+            }
+        }
+        set
+        {
+            lock (_syncLock)
+            {
+                _maxLogCapacity = Math.Max(10, value);
+                TrimLogIfNeeded();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Кількість метрик, які перебувають у стані активного перевантаження в поточний момент.
+    /// </summary>
+    public int ActiveOverloadCount
+    {
+        get
+        {
+            lock (_syncLock)
+            {
+                int count = 0;
+                if (_cpuTracker.AlertFired) count++;
+                if (_tempTracker.AlertFired) count++;
+                if (_ramTracker.AlertFired) count++;
+                return count;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Перевіряє, чи перебуває вказана метрика у стані активного перевантаження.
+    /// </summary>
+    public bool HasActiveOverload(AlertMetricType metricType)
+    {
+        lock (_syncLock)
+        {
+            return metricType switch
+            {
+                AlertMetricType.CpuUsage => _cpuTracker.AlertFired,
+                AlertMetricType.CpuTemperature => _tempTracker.AlertFired,
+                AlertMetricType.RamUsage => _ramTracker.AlertFired,
+                _ => false
+            };
+        }
+    }
+
+    /// <summary>
+    /// Отримує список інцидентів, відфільтрований за типом метрики.
+    /// </summary>
+    public IReadOnlyList<AlertIncident> GetIncidentsByMetric(AlertMetricType metricType)
+    {
+        lock (_syncLock)
+        {
+            var result = new List<AlertIncident>();
+            foreach (var incident in _eventLog)
+            {
+                if (incident.MetricType == metricType)
+                {
+                    result.Add(incident);
+                }
+            }
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Отримує останні N інцидентів у зворотному хронологічному порядку.
+    /// </summary>
+    public IReadOnlyList<AlertIncident> GetRecentIncidents(int maxCount)
+    {
+        if (maxCount <= 0)
+            return Array.Empty<AlertIncident>();
+
+        lock (_syncLock)
+        {
+            int count = Math.Min(maxCount, _eventLog.Count);
+            var result = new List<AlertIncident>(count);
+            for (int i = _eventLog.Count - 1; i >= _eventLog.Count - count; i--)
+            {
+                result.Add(_eventLog[i]);
+            }
+            return result;
+        }
+    }
+
+    private void TrimLogIfNeeded()
+    {
+        while (_eventLog.Count > _maxLogCapacity)
+        {
+            _eventLog.RemoveAt(0);
+        }
+    }
+
     /// <summary>
     /// Очищує журнал подій.
     /// </summary>
@@ -246,6 +352,7 @@ public class AlertService : IAlertService
                         now);
 
                     _eventLog.Add(incident);
+                    TrimLogIfNeeded();
                     incidentToFire = incident;
                 }
             }
