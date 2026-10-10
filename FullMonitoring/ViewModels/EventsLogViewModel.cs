@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Avalonia.Threading;
+using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FullMonitoring.Interfaces;
@@ -18,6 +18,7 @@ namespace FullMonitoring.ViewModels;
 public partial class EventsLogViewModel : ViewModelBase
 {
     private readonly IAlertService _alertService;
+    private readonly SynchronizationContext? _syncContext;
     private readonly List<AlertIncident> _allIncidents = new();
 
     /// <summary>
@@ -66,6 +67,7 @@ public partial class EventsLogViewModel : ViewModelBase
     public EventsLogViewModel(IAlertService alertService)
     {
         _alertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
+        _syncContext = SynchronizationContext.Current;
 
         _alertService.AlertTriggered += OnAlertTriggered;
         _alertService.AlertResolved += OnAlertResolved;
@@ -88,13 +90,13 @@ public partial class EventsLogViewModel : ViewModelBase
             StatusMessage = $"Новий інцидент: {incident.Message} ({incident.FormattedTimestamp})";
         }
 
-        if (Dispatcher.UIThread.CheckAccess())
+        if (_syncContext != null && SynchronizationContext.Current != _syncContext)
         {
-            UpdateAction();
+            _syncContext.Post(_ => UpdateAction(), null);
         }
         else
         {
-            Dispatcher.UIThread.Post(UpdateAction);
+            UpdateAction();
         }
     }
 
@@ -106,13 +108,13 @@ public partial class EventsLogViewModel : ViewModelBase
             StatusMessage = $"Нормалізовано: {incident.MetricDisplayName} ({incident.FormattedTimestamp})";
         }
 
-        if (Dispatcher.UIThread.CheckAccess())
+        if (_syncContext != null && SynchronizationContext.Current != _syncContext)
         {
-            UpdateAction();
+            _syncContext.Post(_ => UpdateAction(), null);
         }
         else
         {
-            Dispatcher.UIThread.Post(UpdateAction);
+            UpdateAction();
         }
     }
 
