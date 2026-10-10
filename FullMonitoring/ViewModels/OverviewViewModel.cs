@@ -170,7 +170,7 @@ public partial class OverviewViewModel : ViewModelBase
     /// Ініціалізує новий екземпляр <see cref="OverviewViewModel"/> з використанням симулятора за замовчуванням.
     /// </summary>
     public OverviewViewModel()
-        : this(new MockTelemetryProvider())
+        : this(TelemetryProviderFactory.Create())
     {
     }
 
