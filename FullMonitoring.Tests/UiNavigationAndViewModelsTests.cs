@@ -94,10 +94,20 @@ public class UiNavigationAndViewModelsTests
         Assert.True(mainVm.IsSettingsSelected);
         Assert.Equal("Налаштування", mainVm.CurrentSectionTitle);
 
+        // Перехід на вкладку «Журнал інцидентів»
+        mainVm.NavigateToEventsLogCommand.Execute(null);
+        Assert.Same(mainVm.EventsLog, mainVm.CurrentViewModel);
+        Assert.False(mainVm.IsOverviewSelected);
+        Assert.False(mainVm.IsProcessesSelected);
+        Assert.False(mainVm.IsSettingsSelected);
+        Assert.True(mainVm.IsEventsLogSelected);
+        Assert.Equal("Журнал інцидентів", mainVm.CurrentSectionTitle);
+
         // Повернення на вкладку «Огляд системи»
         mainVm.NavigateToOverviewCommand.Execute(null);
         Assert.Same(overviewVm, mainVm.CurrentViewModel);
         Assert.True(mainVm.IsOverviewSelected);
+        Assert.False(mainVm.IsEventsLogSelected);
     }
 
     [Fact]
