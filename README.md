@@ -23,7 +23,11 @@
     - `BclTelemetryProvider` — базовий кросплатформний провайдер метрик (.NET BCL: `GC`, `DriveInfo`, `NetworkInterface`).
     - `MockTelemetryProvider` — провайдер із генерацією псевдовипадкових коливань для паралельної розробки UI та тестування.
     - `WindowsProvider` — збір через WMI / Performance Counters / LibreHardwareMonitorLib.
-    - `LinuxProvider` — прямий I/O парсинг `/sys/class/hwmon` та `/proc/stat`.
+    - `LinuxTelemetryProvider` — нативний парсинг procfs/sysfs без сторонніх бінарних залежностей:
+        - `/proc/stat` — загальна утилізація CPU та навантаження кожного логічного ядра за дельтою між `idle` та `total`;
+        - `/proc/meminfo` — загальний і доступний обсяг RAM (`MemTotal`, `MemAvailable`);
+        - `/sys/class/hwmon/` — рекурсивний пошук датчиків температури та швидкості обертання вентиляторів.
+      Розбір рядків виконується над `ReadOnlySpan<char>` для мінімізації аллокацій у GC, а відсутність файлів (віртуальні машини, контейнери) не призводить до падіння.
     - `MacOsProvider` — `sysctl` (P/Invoke) / Fallback-метрики для Apple Silicon.
 3. **Модуль процесів (Process Monitoring):**
     - `IProcessManagerService` — інтерфейс збору телеметрії та завершення процесів.

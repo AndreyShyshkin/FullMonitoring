@@ -5,6 +5,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <!-- Тести Linux-провайдера працюють на ізольованих каталогах procfs/sysfs, тому безпечно викликають
+         платформо-залежні API на будь-якій ОС під час виконання тестів. -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
