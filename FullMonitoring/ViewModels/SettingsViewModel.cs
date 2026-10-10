@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FullMonitoring.Models;
 
 namespace FullMonitoring.ViewModels;
 
@@ -50,6 +51,70 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _statusMessage = "Налаштування за замовчуванням активні.";
+
+    // --- Порогові значення сповіщень про критичне навантаження (Issue #8) ---
+
+    [ObservableProperty]
+    private double _cpuThresholdPercentage = ThresholdSettings.DefaultCpuUsageThresholdPercentage;
+
+    [ObservableProperty]
+    private double _cpuTemperatureThresholdCelsius = ThresholdSettings.DefaultCpuTemperatureThresholdCelsius;
+
+    [ObservableProperty]
+    private double _ramThresholdPercentage = ThresholdSettings.DefaultRamUsageThresholdPercentage;
+
+    [ObservableProperty]
+    private double _durationThresholdSeconds = ThresholdSettings.DefaultDurationThresholdSeconds;
+
+    /// <summary>
+    /// Отримує актуальний знімок конфігурації порогів сповіщень.
+    /// </summary>
+    public ThresholdSettings CurrentThresholdSettings =>
+        new(CpuThresholdPercentage, CpuTemperatureThresholdCelsius, RamThresholdPercentage, DurationThresholdSeconds);
+
+    partial void OnCpuThresholdPercentageChanged(double value)
+    {
+        var clamped = Math.Clamp(value, 1.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.001)
+        {
+            CpuThresholdPercentage = clamped;
+            return;
+        }
+        StatusMessage = $"Поріг завантаження CPU встановлено: {clamped:F0}%.";
+    }
+
+    partial void OnCpuTemperatureThresholdCelsiusChanged(double value)
+    {
+        var clamped = Math.Clamp(value, 30.0, 120.0);
+        if (Math.Abs(clamped - value) > 0.001)
+        {
+            CpuTemperatureThresholdCelsius = clamped;
+            return;
+        }
+        StatusMessage = $"Поріг температури CPU встановлено: {clamped:F0}°C.";
+    }
+
+    partial void OnRamThresholdPercentageChanged(double value)
+    {
+        var clamped = Math.Clamp(value, 1.0, 100.0);
+        if (Math.Abs(clamped - value) > 0.001)
+        {
+            RamThresholdPercentage = clamped;
+            return;
+        }
+        StatusMessage = $"Поріг використання RAM встановлено: {clamped:F0}%.";
+    }
+
+    partial void OnDurationThresholdSecondsChanged(double value)
+    {
+        var clamped = Math.Clamp(value, 0.5, 60.0);
+        if (Math.Abs(clamped - value) > 0.001)
+        {
+            DurationThresholdSeconds = clamped;
+            return;
+        }
+        StatusMessage = $"Мінімальну тривалість перевантаження встановлено: {clamped:F1} с.";
+    }
 
     partial void OnPollingIntervalMsChanged(int value)
     {
@@ -116,6 +181,10 @@ public partial class SettingsViewModel : ViewModelBase
     {
         PollingIntervalMs = DefaultPollingIntervalMs;
         SelectedTheme = "Системна";
+        CpuThresholdPercentage = ThresholdSettings.DefaultCpuUsageThresholdPercentage;
+        CpuTemperatureThresholdCelsius = ThresholdSettings.DefaultCpuTemperatureThresholdCelsius;
+        RamThresholdPercentage = ThresholdSettings.DefaultRamUsageThresholdPercentage;
+        DurationThresholdSeconds = ThresholdSettings.DefaultDurationThresholdSeconds;
         StatusMessage = "Усі налаштування повернуто до значень замовчуванням.";
     }
 }
