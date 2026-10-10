@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -13,7 +13,7 @@
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">
-        <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
               RowSpacing="16"
               Margin="4">
 
@@ -190,8 +190,111 @@
                 </Grid>
             </Border>
 
-            <!-- 4. Нижня панель статусу та скидання налаштувань -->
+            <!-- 4. Порогові сповіщення про критичне навантаження (Issue #8) -->
             <Border Grid.Row="3"
+                    CornerRadius="12"
+                    Padding="20"
+                    BorderThickness="1"
+                    BorderBrush="#26808080"
+                    Background="#0A808080">
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="16">
+                    <StackPanel Grid.Row="0" Spacing="4">
+                        <TextBlock Text="Порогові сповіщення про критичне навантаження"
+                                   FontSize="16"
+                                   FontWeight="Bold" />
+                        <TextBlock Text="Конфігурація граничних лімітів спрацьовування та відстеження тривалості (Issue #8)"
+                                   FontSize="12"
+                                   Opacity="0.65" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*,*,*,*"
+                          ColumnSpacing="14">
+
+                        <!-- Поріг CPU -->
+                        <Border Grid.Column="0"
+                                CornerRadius="8"
+                                Padding="12"
+                                BorderThickness="1"
+                                BorderBrush="#26808080"
+                                Background="#08808080">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Поріг CPU (%)"
+                                           FontSize="12"
+                                           Opacity="0.8" />
+                                <TextBlock Text="{Binding CpuThresholdPercentage, StringFormat='{}{0:F0} %'}"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource SystemStateCriticalBrush}" />
+                                <Slider Minimum="10" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
+                                        Value="{Binding CpuThresholdPercentage}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Поріг температури -->
+                        <Border Grid.Column="1"
+                                CornerRadius="8"
+                                Padding="12"
+                                BorderThickness="1"
+                                BorderBrush="#26808080"
+                                Background="#08808080">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Поріг темп. (°C)"
+                                           FontSize="12"
+                                           Opacity="0.8" />
+                                <TextBlock Text="{Binding CpuTemperatureThresholdCelsius, StringFormat='{}{0:F0} °C'}"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource SystemStateCriticalBrush}" />
+                                <Slider Minimum="40" Maximum="110" TickFrequency="5" IsSnapToTickEnabled="True"
+                                        Value="{Binding CpuTemperatureThresholdCelsius}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Поріг RAM -->
+                        <Border Grid.Column="2"
+                                CornerRadius="8"
+                                Padding="12"
+                                BorderThickness="1"
+                                BorderBrush="#26808080"
+                                Background="#08808080">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Поріг RAM (%)"
+                                           FontSize="12"
+                                           Opacity="0.8" />
+                                <TextBlock Text="{Binding RamThresholdPercentage, StringFormat='{}{0:F0} %'}"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource SystemStateCriticalBrush}" />
+                                <Slider Minimum="10" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
+                                        Value="{Binding RamThresholdPercentage}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Тривалість перевантаження -->
+                        <Border Grid.Column="3"
+                                CornerRadius="8"
+                                Padding="12"
+                                BorderThickness="1"
+                                BorderBrush="#26808080"
+                                Background="#08808080">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Тривалість (с)"
+                                           FontSize="12"
+                                           Opacity="0.8" />
+                                <TextBlock Text="{Binding DurationThresholdSeconds, StringFormat='{}{0:F1} с'}"
+                                           FontSize="18"
+                                           FontWeight="Bold" />
+                                <Slider Minimum="1" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding DurationThresholdSeconds}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- 5. Нижня панель статусу та скидання налаштувань -->
+            <Border Grid.Row="4"
                     CornerRadius="10"
                     Padding="16,12"
                     BorderThickness="1"
