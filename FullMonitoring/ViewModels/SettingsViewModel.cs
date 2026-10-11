@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Avalonia;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FullMonitoring.Models;
@@ -8,7 +10,8 @@ using FullMonitoring.Models;
 namespace FullMonitoring.ViewModels;
 
 /// <summary>
-/// Модель представлення для вкладки налаштувань застосунку (інтервал опитування та вибір теми оформлення).
+/// Модель представлення для вкладки налаштувань застосунку (інтервал опитування, пороги сповіщень
+/// та динамічне перемикання теми оформлення Dark / Light / System).
 /// </summary>
 public partial class SettingsViewModel : ViewModelBase
 {
@@ -50,6 +53,9 @@ public partial class SettingsViewModel : ViewModelBase
     private bool _isDarkThemeEnabled;
 
     [ObservableProperty]
+    private ThemeVariant _currentThemeVariant = ThemeVariant.Default;
+
+    [ObservableProperty]
     private string _statusMessage = "Налаштування за замовчуванням активні.";
 
     // --- Порогові значення сповіщень про критичне навантаження (Issue #8) ---
@@ -72,6 +78,26 @@ public partial class SettingsViewModel : ViewModelBase
     public ThresholdSettings CurrentThresholdSettings =>
         new(CpuThresholdPercentage, CpuTemperatureThresholdCelsius, RamThresholdPercentage, DurationThresholdSeconds);
 
+    /// <summary>
+    /// Перетворює локалізовану назву теми на <see cref="ThemeVariant"/> Avalonia UI.
+    /// </summary>
+    public static ThemeVariant ResolveThemeVariant(string? themeName)
+    {
+        if (string.Equals(themeName, "Темна", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(themeName, "Dark", StringComparison.OrdinalIgnoreCase))
+        {
+            return ThemeVariant.Dark;
+        }
+
+        if (string.Equals(themeName, "Світла", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(themeName, "Light", StringComparison.OrdinalIgnoreCase))
+        {
+            return ThemeVariant.Light;
+        }
+
+        return ThemeVariant.Default;
+    }
+
     partial void OnCpuThresholdPercentageChanged(double value)
     {
         var clamped = Math.Clamp(value, 1.0, 100.0);
@@ -80,6 +106,7 @@ public partial class SettingsViewModel : ViewModelBase
             CpuThresholdPercentage = clamped;
             return;
         }
+
         StatusMessage = $"Поріг завантаження CPU встановлено: {clamped:F0}%.";
     }
 
@@ -91,6 +118,7 @@ public partial class SettingsViewModel : ViewModelBase
             CpuTemperatureThresholdCelsius = clamped;
             return;
         }
+
         StatusMessage = $"Поріг температури CPU встановлено: {clamped:F0}°C.";
     }
 
@@ -102,6 +130,7 @@ public partial class SettingsViewModel : ViewModelBase
             RamThresholdPercentage = clamped;
             return;
         }
+
         StatusMessage = $"Поріг використання RAM встановлено: {clamped:F0}%.";
     }
 
@@ -113,6 +142,7 @@ public partial class SettingsViewModel : ViewModelBase
             DurationThresholdSeconds = clamped;
             return;
         }
+
         StatusMessage = $"Мінімальну тривалість перевантаження встановлено: {clamped:F1} с.";
     }
 
@@ -133,6 +163,8 @@ public partial class SettingsViewModel : ViewModelBase
     partial void OnSelectedThemeChanged(string value)
     {
         IsDarkThemeEnabled = string.Equals(value, "Темна", StringComparison.OrdinalIgnoreCase);
+        CurrentThemeVariant = ResolveThemeVariant(value);
+        ApplyThemeToApplication(CurrentThemeVariant);
         StatusMessage = $"Обрано тему оформлення: {value}.";
     }
 
@@ -174,6 +206,15 @@ public partial class SettingsViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Динамічно перемикає тему оформлення між темною та світлою.
+    /// </summary>
+    [RelayCommand]
+    public void ToggleTheme()
+    {
+        SelectedTheme = IsDarkThemeEnabled ? "Світла" : "Темна";
+    }
+
+    /// <summary>
     /// Скидає параметри опитування та теми до значень за замовчуванням.
     /// </summary>
     [RelayCommand]
@@ -186,5 +227,13 @@ public partial class SettingsViewModel : ViewModelBase
         RamThresholdPercentage = ThresholdSettings.DefaultRamUsageThresholdPercentage;
         DurationThresholdSeconds = ThresholdSettings.DefaultDurationThresholdSeconds;
         StatusMessage = "Усі налаштування повернуто до значень замовчуванням.";
+    }
+
+    private static void ApplyThemeToApplication(ThemeVariant variant)
+    {
+        if (Application.Current is not null)
+        {
+            Application.Current.RequestedThemeVariant = variant;
+        }
     }
 }
