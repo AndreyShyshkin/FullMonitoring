@@ -291,6 +291,8 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
         ProviderName = _telemetryProvider.ProviderName;
 
+        CpuUsageHistory.FillWithDefault(0.0);
+
         _cpuLineSeries = new LineSeries<double>
         {
             Name = "Утилізація CPU (%)",
