@@ -75,11 +75,17 @@ public partial class MainViewModel : ViewModelBase
         EventsLog = eventsLog ?? new EventsLogViewModel();
 
         Overview.PollingIntervalMs = Settings.PollingIntervalMs;
+        Overview.ApplyThemeVariant(Settings.IsDarkThemeEnabled);
         Settings.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName == nameof(SettingsViewModel.PollingIntervalMs))
             {
                 Overview.PollingIntervalMs = Settings.PollingIntervalMs;
+            }
+            else if (args.PropertyName == nameof(SettingsViewModel.IsDarkThemeEnabled) ||
+                     args.PropertyName == nameof(SettingsViewModel.SelectedTheme))
+            {
+                Overview.ApplyThemeVariant(Settings.IsDarkThemeEnabled);
             }
         };
 

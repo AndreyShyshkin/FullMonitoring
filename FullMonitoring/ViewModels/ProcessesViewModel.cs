@@ -13,6 +13,8 @@ namespace FullMonitoring.ViewModels;
 
 /// <summary>
 /// Модель представлення для вкладки моніторингу та керування активними процесами ОС.
+/// Підтримує індикатор первинного завантаження, підказку блокування політикою безпеки ОС
+/// та ненав'язливе виведення помилок провайдера (InfoBar) без падіння вікна (Issue #3, Issue #11).
 /// </summary>
 public partial class ProcessesViewModel : ViewModelBase
 {
@@ -39,11 +41,28 @@ public partial class ProcessesViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool _isInitialLoading = true;
+
+    [ObservableProperty]
+    private bool _hasProviderError;
+
+    [ObservableProperty]
+    private string _providerErrorMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _isLastActionRestrictedByOs;
+
+    /// <summary>
+    /// Стандартний текст візуальної підказки для дій, доступ до яких обмежено правами ОС.
+    /// </summary>
+    public string OsSecurityRestrictionText => SystemStatePalette.OsSecurityPolicyRestrictedText;
+
     /// <summary>
     /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> зі стандартним сервісом процесів.
     /// </summary>
     public ProcessesViewModel()
-        : this(new ProcessManagerService())
+        : this(new ProcessManagerService(), deferInitialCollection: false)
     {
     }
 
@@ -51,10 +70,14 @@ public partial class ProcessesViewModel : ViewModelBase
     /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> із заданим сервісом процесів.
     /// </summary>
     /// <param name="processManagerService">Сервіс отримання та завершення процесів.</param>
-    public ProcessesViewModel(IProcessManagerService processManagerService)
+    /// <param name="deferInitialCollection">Чи відкласти первинне завантаження списку процесів.</param>
+    public ProcessesViewModel(IProcessManagerService processManagerService, bool deferInitialCollection = false)
     {
         _processManagerService = processManagerService ?? throw new ArgumentNullException(nameof(processManagerService));
-        RefreshProcesses();
+        if (!deferInitialCollection)
+        {
+            RefreshProcesses();
+        }
     }
 
     partial void OnSearchQueryChanged(string value)
@@ -64,13 +87,35 @@ public partial class ProcessesViewModel : ViewModelBase
 
     /// <summary>
     /// Оновлює таблицю активних процесів (топ-50 за споживанням оперативної пам'яті).
+    /// У разі винятку провайдера формує ненав'язливе повідомлення InfoBar.
     /// </summary>
     [RelayCommand]
     public void RefreshProcesses()
     {
-        _allProcesses = _processManagerService.GetRunningProcesses(50);
-        ApplyFilter();
-        StatusMessage = $"Завантажено процесів: {Processes.Count} (оновлено о {DateTimeOffset.Now:HH:mm:ss})";
+        try
+        {
+            _allProcesses = _processManagerService.GetRunningProcesses(50);
+            ApplyFilter();
+            IsInitialLoading = false;
+            StatusMessage = $"Завантажено процесів: {Processes.Count} (оновлено о {DateTimeOffset.Now:HH:mm:ss})";
+        }
+        catch (Exception ex)
+        {
+            IsInitialLoading = false;
+            HasProviderError = true;
+            ProviderErrorMessage = $"Помилка отримання списку процесів: {ex.Message}";
+            StatusMessage = "Не вдалося оновити список процесів.";
+        }
+    }
+
+    /// <summary>
+    /// Закриває ненав'язливе повідомлення про помилку провайдера процесів (InfoBar).
+    /// </summary>
+    [RelayCommand]
+    public void DismissProviderError()
+    {
+        HasProviderError = false;
+        ProviderErrorMessage = string.Empty;
     }
 
     /// <summary>
@@ -86,16 +131,26 @@ public partial class ProcessesViewModel : ViewModelBase
         }
 
         var target = SelectedProcess;
-        bool killed = _processManagerService.KillProcess(target.Pid);
+        try
+        {
+            bool killed = _processManagerService.KillProcess(target.Pid);
 
-        if (killed)
-        {
-            RefreshProcesses();
-            StatusMessage = $"Процес «{target.Name}» (PID: {target.Pid}) успішно завершено.";
+            if (killed)
+            {
+                IsLastActionRestrictedByOs = false;
+                RefreshProcesses();
+                StatusMessage = $"Процес «{target.Name}» (PID: {target.Pid}) успішно завершено.";
+            }
+            else
+            {
+                IsLastActionRestrictedByOs = true;
+                StatusMessage = $"{SystemStatePalette.OsSecurityPolicyRestrictedText}: не вдалося завершити процес «{target.Name}» (PID: {target.Pid}).";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            StatusMessage = $"Не вдалося завершити процес «{target.Name}» (PID: {target.Pid}): недостатньо прав доступу.";
+            HasProviderError = true;
+            ProviderErrorMessage = $"Збій при спробі завершення процесу «{target.Name}» (PID: {target.Pid}): {ex.Message}";
         }
     }
 
