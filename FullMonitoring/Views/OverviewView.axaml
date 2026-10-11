@@ -1,9 +1,10 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:FullMonitoring.ViewModels"
              xmlns:models="using:FullMonitoring.Models"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="620"
              x:Class="FullMonitoring.Views.OverviewView"
              x:DataType="vm:OverviewViewModel">
@@ -75,21 +76,21 @@
                   RowSpacing="16"
                   ColumnSpacing="16">
 
-                <!-- 1. Картка CPU -->
+                <!-- 1. Картка CPU + Графік динаміки за 60 секунд -->
                 <Border Grid.Row="0" Grid.Column="0"
                         CornerRadius="12"
                         Padding="18"
                         BorderThickness="1"
                         BorderBrush="#26808080"
                         Background="#0A808080">
-                    <Grid RowDefinitions="Auto,Auto,Auto,*"
+                    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto"
                           RowSpacing="12">
                         <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                             <StackPanel Grid.Column="0" Spacing="2">
                                 <TextBlock Text="Центральний процесор (CPU)"
                                            FontSize="16"
                                            FontWeight="Bold" />
-                                <TextBlock Text="Загальне навантаження та термодатчики"
+                                <TextBlock Text="Динаміка утилізації за останні 60 секунд та термодатчики"
                                            FontSize="12"
                                            Opacity="0.65" />
                             </StackPanel>
@@ -126,7 +127,34 @@
                                      Foreground="{Binding CpuStateBrush}"
                                      CornerRadius="4" />
 
-                        <Grid Grid.Row="3"
+                        <!-- Лінійний графік динаміки навантаження CPU за останні 60 секунд (LiveCharts2) -->
+                        <Border Grid.Row="3"
+                                CornerRadius="8"
+                                Padding="8,6"
+                                Background="#0D808080"
+                                MinHeight="135">
+                            <Grid RowDefinitions="Auto,*" RowSpacing="4">
+                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Історія завантаження CPU (60 с)"
+                                               FontSize="11"
+                                               Opacity="0.7" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding CpuUsageHistory.Count, StringFormat='Точок у буфері: {0}/60'}"
+                                               FontSize="11"
+                                               Opacity="0.6" />
+                                </Grid>
+                                <lvc:CartesianChart Grid.Row="1"
+                                                    Series="{Binding CpuSeries}"
+                                                    XAxes="{Binding CpuXAxes}"
+                                                    YAxes="{Binding CpuYAxes}"
+                                                    TooltipPosition="Hidden"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch" />
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="4"
                               ColumnDefinitions="*,*"
                               ColumnSpacing="12"
                               VerticalAlignment="Bottom">
@@ -152,21 +180,21 @@
                     </Grid>
                 </Border>
 
-                <!-- 2. Картка RAM -->
+                <!-- 2. Картка RAM + Кругова діаграма та прогрес-бар розподілу пам'яті -->
                 <Border Grid.Row="0" Grid.Column="1"
                         CornerRadius="12"
                         Padding="18"
                         BorderThickness="1"
                         BorderBrush="#26808080"
                         Background="#0A808080">
-                    <Grid RowDefinitions="Auto,Auto,Auto,*"
+                    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto"
                           RowSpacing="12">
                         <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                             <StackPanel Grid.Column="0" Spacing="2">
                                 <TextBlock Text="Оперативна пам'ять (RAM)"
                                            FontSize="16"
                                            FontWeight="Bold" />
-                                <TextBlock Text="Розподіл фізичної пам'яті системи"
+                                <TextBlock Text="Розподіл фізичної пам'яті системи у реальному часі"
                                            FontSize="12"
                                            Opacity="0.65" />
                             </StackPanel>
@@ -196,6 +224,7 @@
                                        Opacity="0.75" />
                         </Grid>
 
+                        <!-- Горизонтальний прогрес-бар заповнення RAM -->
                         <ProgressBar Grid.Row="2"
                                      Minimum="0"
                                      Maximum="100"
@@ -203,7 +232,45 @@
                                      Foreground="{Binding RamStateBrush}"
                                      CornerRadius="4" />
 
-                        <Grid Grid.Row="3"
+                        <!-- Кругова діаграма (Donut Chart) розподілу пам'яті RAM (LiveCharts2) -->
+                        <Border Grid.Row="3"
+                                CornerRadius="8"
+                                Padding="10,8"
+                                Background="#0D808080"
+                                MinHeight="135">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <lvc:PieChart Grid.Column="0"
+                                              Series="{Binding RamSeries}"
+                                              InitialRotation="-90"
+                                              TooltipPosition="Hidden"
+                                              HorizontalAlignment="Stretch"
+                                              VerticalAlignment="Stretch" />
+
+                                <StackPanel Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Spacing="8">
+                                    <TextBlock Text="Структура пам'яті"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Opacity="0.8" />
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Зайнята частка:" FontSize="11" Opacity="0.65" />
+                                        <TextBlock Text="{Binding RamUsageFormatted}"
+                                                   FontSize="14"
+                                                   FontWeight="Bold"
+                                                   Foreground="{Binding RamStateBrush}" />
+                                    </StackPanel>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Доступний резерв:" FontSize="11" Opacity="0.65" />
+                                        <TextBlock Text="{Binding RamFreeFormatted}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="4"
                               ColumnDefinitions="*,*"
                               ColumnSpacing="12"
                               VerticalAlignment="Bottom">
