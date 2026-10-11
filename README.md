@@ -9,6 +9,7 @@
 
 - **Runtime:** .NET 10.0 (LTS)
 - **UI Framework:** Avalonia UI (v11+)
+- **Візуалізація графіків:** LiveCharts2 (`LiveChartsCore.SkiaSharpView.Avalonia`)
 - **Архітектурний патерн:** MVVM (CommunityToolkit.Mvvm)
 - **DI Container:** Microsoft.Extensions.DependencyInjection
 
@@ -44,9 +45,13 @@
         - Захист від дублювання (Debouncing): якщо показник стабільно тримається вище критичного ліміту, інцидент реєструється один раз, а повторні сповіщення щосекунди блокуються до повернення метрики в норму.
         - `AlertIncident` — модель події у журналі (унікальний ідентифікатор, мітка часу, тип метрики, зафіксоване та порогове значення, текстове повідомлення, статус вирішення).
         - Потокобезпечний журнал інцидентів з обмеженням розміру (буфер до 500 записів) та подіями нотифікації UI (`IncidentRaised`, `IncidentResolved`).
-5. **UI Layer:** Views та ViewModels не мають прив'язки до поточної ОС. Відображення даних реалізовано через реактивний Data Binding:
-    - `MainWindow` / `MainViewModel` — адаптивний головний каркас (Sidebar + Dashboard), бейдж кількості інцидентів та навігація між вкладками.
-    - `OverviewView` / `OverviewViewModel` — зведені картки метрик CPU, RAM, Disk, Network.
+5. **UI Layer та візуалізація в реальному часі (LiveCharts2):** Views та ViewModels не мають прив'язки до поточної ОС. Відображення даних реалізовано через реактивний Data Binding:
+    - `MainWindow` / `MainViewModel` — адаптивний головний каркас (Sidebar + Dashboard), бейдж кількості інцидентів, синхронізація інтервалу опитування та навігація між вкладками.
+    - `OverviewView` / `OverviewViewModel` — зведені картки метрик CPU, RAM, Disk, Network із графіками в реальному часі:
+        - Лінійний графік динаміки утилізації CPU за останні 60 секунд (`CartesianChart` + `LineSeries<double>`).
+        - Кругова діаграма (Donut `PieChart` + `PieSeries<ObservableValue>`) та горизонтальний `ProgressBar` розподілу оперативної пам'яті RAM (зайнято / вільно).
+        - Таймер опитування `DispatcherTimer` (частота за замовчуванням 1 секунда) з оновленням колекцій і серій виключно в UI-потоці (`Dispatcher.UIThread`).
+    - `BoundedObservableBuffer<T>` — колекція `ObservableCollection<T>` фіксованого розміру (кільцевий буфер на 60 точок з автоматичним витісненням найстарішого елемента за індексом `0`), що запобігає витоку пам'яті під час тривалої роботи.
     - `ProcessesView` / `ProcessesViewModel` — таблиця активних процесів із пошуком та керуванням.
     - `EventsLogView` / `EventsLogViewModel` — журнал інцидентів із фільтрацією за типами метрик, часовими мітками та очищенням списку.
     - `SettingsView` / `SettingsViewModel` — налаштування інтервалу опитування, теми оформлення та порогів навантаження CPU/RAM/температури.
