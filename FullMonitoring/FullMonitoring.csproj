@@ -12,6 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="FullMonitoring.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.1.2" />
         <PackageReference Include="Avalonia.Desktop" Version="12.1.2" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.2" />
@@ -22,5 +26,6 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.1.0-dev-798" />
     </ItemGroup>
 </Project>

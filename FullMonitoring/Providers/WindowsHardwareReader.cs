@@ -78,7 +78,9 @@ public class WindowsHardwareReader : IDisposable
         return cpu?.Sensors.FirstOrDefault(s => s.SensorType == SensorType.Temperature)?.Value;
     }
 
-    public float? GetGpuTemperature()
+   public float? GetGpuTemperature()
+{
+    try
     {
         var gpu = _computer.Hardware.FirstOrDefault(h => 
             h.HardwareType == HardwareType.GpuNvidia || 
@@ -87,6 +89,11 @@ public class WindowsHardwareReader : IDisposable
 
         return gpu?.Sensors.FirstOrDefault(s => s.SensorType == SensorType.Temperature)?.Value;
     }
+    catch
+    {
+        return null; // Захист від відсутності драйверів GPU
+    }
+}
 
     public float? GetFanSpeed()
     {
