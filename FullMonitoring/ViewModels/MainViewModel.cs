@@ -74,6 +74,15 @@ public partial class MainViewModel : ViewModelBase
         Settings = settings ?? throw new ArgumentNullException(nameof(settings));
         EventsLog = eventsLog ?? new EventsLogViewModel();
 
+        Overview.PollingIntervalMs = Settings.PollingIntervalMs;
+        Settings.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(SettingsViewModel.PollingIntervalMs))
+            {
+                Overview.PollingIntervalMs = Settings.PollingIntervalMs;
+            }
+        };
+
         _currentViewModel = Overview;
     }
 
