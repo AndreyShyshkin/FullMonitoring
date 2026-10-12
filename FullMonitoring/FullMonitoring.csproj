@@ -1,6 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <OutputType Condition="'$(OutputType)' == ''">WinExe</OutputType>
+        <!-- Без условия: SDK.props уже выставил OutputType=Library до чтения тела проекта,
+             поэтому Condition="'$(OutputType)' == ''" никогда не срабатывал и проект
+             считался библиотекой (Rider: "no runnable target frameworks").
+             Глобальные свойства (например, OutputType=Library из FullMonitoring.Tests)
+             всё равно перекрывают это значение, сборка тестов не меняется. -->
+        <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using FullMonitoring.Interfaces;
 using FullMonitoring.Models;
 using FullMonitoring.Providers;
@@ -56,7 +57,7 @@ public class PlatformDiAndMacOsTests
     public void MacOsTelemetryProvider_HasExpectedProviderName()
     {
         using var provider = new MacOsTelemetryProvider();
-        Assert.Equal("MacOS Telemetry Provider (sysctl / BCL Fallback)", provider.ProviderName);
+        Assert.Equal("MacOS Telemetry Provider (sysctl / Mach)", provider.ProviderName);
     }
 
     [Fact]
@@ -129,6 +130,132 @@ public class PlatformDiAndMacOsTests
         using var provider = new MacOsTelemetryProvider();
         string brand = provider.CpuBrand;
         Assert.NotNull(brand);
+    }
+
+    [Fact]
+    public void MacOsTelemetryProvider_GetRamMetrics_UsedAndFreeCoverTotalOnMacOs()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return; // Маш-джерело пам'яті існує лише на macOS.
+        }
+
+        using var provider = new MacOsTelemetryProvider();
+        var ram = provider.GetRamMetrics();
+
+        // Займаний обсяг рахується за формулою Activity Monitor, тож Used + Free має давати рівно Total.
+        Assert.Equal(ram.TotalBytes, ram.UsedBytes + ram.FreeBytes);
+        Assert.True(ram.UsedBytes > 0, "На macOS зайвий обсяг RAM має бути зчитано з Mach API");
+        Assert.True(
+            Math.Abs(ram.UsedPercentage - (double)ram.UsedBytes / ram.TotalBytes * 100.0) < 0.01,
+            "Відсоток використання має відповідати співвідношенню Used / Total");
+    }
+
+    // --- MacOsMachReader: системні лічильники Mach API ---
+
+    [Fact]
+    public void MacOsMachReader_IsAvailable_MatchesCurrentOs()
+    {
+        Assert.Equal(OperatingSystem.IsMacOS(), MacOsMachReader.IsAvailable);
+    }
+
+    [Fact]
+    public void MacOsMachReader_SafeFallback_DoesNotThrowOnAnyOs()
+    {
+        var ex = Record.Exception(() =>
+        {
+            bool ticks = MacOsMachReader.TryGetSystemCpuTicks(out _);
+            bool cores = MacOsMachReader.TryGetPerCoreCpuTicks(out _);
+            bool vm = MacOsMachReader.TryGetVmStatistics(out _);
+            bool page = MacOsMachReader.TryGetPageSize(out _);
+        });
+
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public void MacOsMachReader_ComputeUsagePercentage_UsesTickDeltas()
+    {
+        // Перший знімок (однакові лічильники) не дає оцінки — викликач лишає попереднє значення.
+        var baseline = new MacOsMachReader.CpuTicks(100, 50, 850, 0);
+        Assert.Null(MacOsMachReader.ComputeUsagePercentage(baseline, baseline));
+
+        // За інтервал: user +50, system +20, idle +30 → завантаження 70 зі 100 тактів = 70%.
+        var next = new MacOsMachReader.CpuTicks(150, 70, 880, 0);
+        Assert.Equal(70.0, MacOsMachReader.ComputeUsagePercentage(baseline, next)!.Value, 5);
+
+        // Переповнення 32-бітних лічильників: user зріс через обертання лічильника.
+        var beforeWrap = new MacOsMachReader.CpuTicks(uint.MaxValue - 10, 0, 1000, 0);
+        var afterWrap = new MacOsMachReader.CpuTicks(10, 0, 1010, 0);
+        double wrapped = MacOsMachReader.ComputeUsagePercentage(beforeWrap, afterWrap)!.Value;
+        Assert.InRange(wrapped, 0.0, 100.0);
+        Assert.True(wrapped > 50.0, "Після обертання лічильника завантаження має лишитися правдоподібним");
+    }
+
+    [Fact]
+    public void MacOsMachReader_ComputeUsedMemoryBytes_MatchesActivityMonitorFormula()
+    {
+        var statistics = new MacOsMachReader.VmStatistics64(
+            FreePages: 10,
+            ActivePages: 5000, // активні сторінки не входять у phys_footprint окремо від internal
+            InactivePages: 7000, // кеш файлів — не входить у зайнятий обсяг
+            WiredPages: 50,
+            SpeculativePages: 3,
+            PurgeablePages: 7,
+            CompressorPages: 25,
+            InternalPages: 100);
+
+        // Internal + Wired + Compressor = 175 сторінок.
+        Assert.Equal(175 * 16384L, MacOsMachReader.ComputeUsedMemoryBytes(statistics, 16384));
+
+        // Некоректний розмір сторінки — чесний нуль без винятку.
+        Assert.Equal(0, MacOsMachReader.ComputeUsedMemoryBytes(statistics, 0));
+    }
+
+    [Fact]
+    public void MacOsMachReader_TryGetSystemCpuTicks_ReturnsCountersOnMacOs()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+
+        Assert.True(MacOsMachReader.TryGetSystemCpuTicks(out var ticks), "HOST_CPU_LOAD_INFO має читатися на macOS");
+        Assert.True(ticks.Total > 0);
+
+        Assert.True(MacOsMachReader.TryGetVmStatistics(out var statistics), "HOST_VM_INFO64 має читатися на macOS");
+        Assert.True(statistics.ActivePages > 0, "Активні сторінки мають існувати під час роботи системи");
+        Assert.True(statistics.WiredPages > 0, "Закріплені сторінки мають існувати під час роботи системи");
+        Assert.True(statistics.InternalPages > 0, "Сторінки internal мають існувати під час роботи системи");
+
+        Assert.True(MacOsMachReader.TryGetPageSize(out long pageSize), "host_page_size має читатися на macOS");
+        Assert.True(pageSize >= 4096, $"Розмір сторінки нереальний: {pageSize}");
+
+        Assert.True(MacOsMachReader.TryGetPerCoreCpuTicks(out var cores), "host_processor_info має читатися на macOS");
+        Assert.True(cores.Length >= 1);
+        foreach (var core in cores)
+        {
+            Assert.True(core.Total > 0, "Лічильники тактів ядра мають бути додатними");
+        }
+    }
+
+    [Fact]
+    public void MacOsTelemetryProvider_GetCpuMetrics_ReportsSystemWideUsageOnSecondSample()
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+
+        using var provider = new MacOsTelemetryProvider();
+
+        // Перший вимір — базова точка (0%), другий — реальна оцінка системного завантаження.
+        provider.GetCpuMetrics();
+        Thread.Sleep(300);
+        var cpu = provider.GetCpuMetrics();
+
+        Assert.InRange(cpu.TotalUsagePercentage, 0.0, 100.0);
+        Assert.Equal(provider.LogicalCpuCount, cpu.CoreUsagesPercentage.Count);
     }
 
     // --- Платформова резолюція: чиста функція мапінгу ---
