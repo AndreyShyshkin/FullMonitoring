@@ -113,7 +113,9 @@ public static class TelemetryServiceRegistration
 
         // ViewModels вкладок.
         services.AddTransient<OverviewViewModel>(provider => new OverviewViewModel(
-            provider.GetRequiredService<ITelemetryProvider>()));
+            provider.GetRequiredService<ITelemetryProvider>(),
+            provider.GetRequiredService<IExportService>(),
+            provider.GetRequiredService<IFileSaveDialogService>()));
         services.AddTransient<ProcessesViewModel>(provider => new ProcessesViewModel(
             provider.GetRequiredService<IProcessManagerService>(),
             provider.GetRequiredService<IExportService>(),

@@ -69,12 +69,20 @@ public partial class ProcessesViewModel : ViewModelBase
     /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> зі стандартним сервісом процесів.
     /// </summary>
     public ProcessesViewModel()
-        : this(new ProcessManagerService(), exportService: null, fileSaveDialogService: null, deferInitialCollection: false)
+        : this(new ProcessManagerService(), deferInitialCollection: false)
     {
     }
 
     /// <summary>
-    /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> із заданим сервісом процесів та сервісом експорту.
+    /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> із заданим сервісом процесів.
+    /// </summary>
+    public ProcessesViewModel(IProcessManagerService processManagerService, bool deferInitialCollection = false)
+        : this(processManagerService, new ExportService(), new AvaloniaStorageFileSaveDialogService(), deferInitialCollection)
+    {
+    }
+
+    /// <summary>
+    /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> із заданим сервісом процесів та сервісами експорту.
     /// </summary>
     /// <param name="processManagerService">Сервіс отримання та завершення процесів.</param>
     /// <param name="exportService">Сервіс експорту даних у JSON/CSV.</param>
@@ -82,13 +90,13 @@ public partial class ProcessesViewModel : ViewModelBase
     /// <param name="deferInitialCollection">Чи відкласти первинне завантаження списку процесів.</param>
     public ProcessesViewModel(
         IProcessManagerService processManagerService,
-        IExportService? exportService = null,
-        IFileSaveDialogService? fileSaveDialogService = null,
+        IExportService exportService,
+        IFileSaveDialogService fileSaveDialogService,
         bool deferInitialCollection = false)
     {
         _processManagerService = processManagerService ?? throw new ArgumentNullException(nameof(processManagerService));
-        _exportService = exportService ?? new ExportService();
-        _fileSaveDialogService = fileSaveDialogService ?? new AvaloniaStorageFileSaveDialogService();
+        _exportService = exportService ?? throw new ArgumentNullException(nameof(exportService));
+        _fileSaveDialogService = fileSaveDialogService ?? throw new ArgumentNullException(nameof(fileSaveDialogService));
 
         if (!deferInitialCollection)
         {
