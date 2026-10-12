@@ -3,19 +3,23 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using FullMonitoring.Interfaces;
-using FullMonitoring.Models;
-using FullMonitoring.Providers;
 using FullMonitoring.Services;
 using FullMonitoring.ViewModels;
 using FullMonitoring.Views;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FullMonitoring;
 
+/// <summary>
+/// Точка входу Avalonia-застосунку з конфігурацією DI-контейнера (Issue #9).
+/// Резолюція <see cref="ITelemetryProvider"/> виконується автоматично за поточною ОС
+/// через <c>RuntimeInformation.IsOSPlatform</c>: Windows, Linux або macOS — єдиний бінарний білд.
+/// </summary>
 public partial class App : Application
 {
+    private IServiceProvider? _serviceProvider;
     private ITelemetryProvider? _telemetryProvider;
     private IAlertService? _alertService;
-    private IProcessManagerService? _processManagerService;
 
     public override void Initialize()
     {
@@ -26,36 +30,22 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // 1. Ініціалізація провайдера телеметрії (Issue #6)
-            _telemetryProvider = OperatingSystem.IsWindows()
-                ? new WindowsTelemetryProvider()
-                : OperatingSystem.IsLinux()
-                    ? new LinuxTelemetryProvider()
-                    : new BclTelemetryProvider();
+            // 1. Конфігурація DI-контейнера з платформою резолюцією (Issue #9).
+            var services = new ServiceCollection();
+            services.AddFullMonitoringPlatformServices();
+            _serviceProvider = services.BuildServiceProvider();
 
-            // 2. Ініціалізація допоміжних сервісів
-            _alertService = new AlertService(ThresholdSettings.Default, _telemetryProvider, TimeSpan.FromSeconds(1));
-            _processManagerService = new ProcessManagerService();
-
-            // 3. Створення дочірніх ViewModels
-            var overviewViewModel = new OverviewViewModel(_telemetryProvider);
-            var processesViewModel = new ProcessesViewModel(_processManagerService);
-            var settingsViewModel = new SettingsViewModel();
-            var eventsLogViewModel = new EventsLogViewModel(_alertService);
-
-            // 4. Створення MainViewModel із передачею всіх чотирьох підмодулів
-            var mainViewModel = new MainViewModel(
-                overviewViewModel,
-                processesViewModel,
-                settingsViewModel,
-                eventsLogViewModel);
+            // 2. Резолюція залежностей із контейнера.
+            _telemetryProvider = _serviceProvider.GetRequiredService<ITelemetryProvider>();
+            _alertService = _serviceProvider.GetRequiredService<IAlertService>();
+            var mainViewModel = _serviceProvider.GetRequiredService<MainViewModel>();
 
             desktop.MainWindow = new MainWindow
             {
                 DataContext = mainViewModel,
             };
 
-            // 5. Підписка на вивільнення ресурсів при закритті (Issue #10)
+            // 3. Підписка на вивільнення ресурсів при закритті (Issue #10).
             desktop.ShutdownRequested += OnShutdownRequested;
         }
 
@@ -64,9 +54,18 @@ public partial class App : Application
 
     private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
-        // Послідовна зупинка та вивільнення фонових процесів
+        // Послідовна зупинка та вивільнення фонових процесів.
         _alertService?.Stop();
-        _alertService?.Dispose();
+        (_alertService as IDisposable)?.Dispose();
         _telemetryProvider?.Dispose();
+
+        if (_serviceProvider is IDisposable disposableProvider)
+        {
+            disposableProvider.Dispose();
+        }
+
+        _serviceProvider = null;
+        _telemetryProvider = null;
+        _alertService = null;
     }
 }
