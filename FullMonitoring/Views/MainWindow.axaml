@@ -6,6 +6,9 @@
         mc:Ignorable="d" d:DesignWidth="1120" d:DesignHeight="720"
         x:Class="FullMonitoring.Views.MainWindow"
         x:DataType="vm:MainViewModel"
+        MinWidth="800"
+        MinHeight="600"
+        Background="{DynamicResource AppBackgroundBrush}"
         Icon="/Assets/avalonia-logo.ico"
         Title="FullMonitoring — Системний моніторинг">
 
@@ -15,41 +18,41 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <!-- Базова сітка вікна: Бічна навігаційна панель (Sidebar) + Робоча область (Dashboard) -->
+    <!-- Базова сітка вікна (адаптована для 800x600+): Бічна навігаційна панель (Sidebar) + Робоча область (Dashboard) -->
     <Grid ColumnDefinitions="Auto,*">
 
         <!-- Бічна навігаційна панель (Sidebar) -->
         <Border Grid.Column="0"
-                Padding="18,20"
+                Padding="14,16"
                 BorderThickness="0,0,1,0"
-                BorderBrush="#26808080"
-                Background="#0D808080">
+                BorderBrush="{DynamicResource CardBorderBrush}"
+                Background="{DynamicResource SidebarBackgroundBrush}">
             <Grid RowDefinitions="Auto,*,Auto"
-                  RowSpacing="24">
+                  RowSpacing="16">
 
                 <!-- Заголовок застосунку в бічній панелі -->
-                <StackPanel Grid.Row="0" Spacing="4" Margin="4,0,12,0">
+                <StackPanel Grid.Row="0" Spacing="3" Margin="4,0,8,0">
                     <TextBlock Text="FullMonitoring"
-                               FontSize="20"
+                               FontSize="18"
                                FontWeight="Bold" />
                     <TextBlock Text="Кросплатформна телеметрія"
-                               FontSize="12"
-                               Opacity="0.65" />
+                               FontSize="11"
+                               Opacity="0.7" />
                 </StackPanel>
 
                 <!-- Меню навігації між вкладками -->
-                <StackPanel Grid.Row="1" Spacing="8">
+                <StackPanel Grid.Row="1" Spacing="6">
                     <TextBlock Text="НАВІГАЦІЯ"
-                               FontSize="11"
+                               FontSize="10"
                                FontWeight="Bold"
-                               Opacity="0.5"
-                               Margin="6,0,0,4" />
+                               Opacity="0.55"
+                               Margin="6,0,0,2" />
 
                     <Button Content="Огляд системи"
                             Command="{Binding NavigateToOverviewCommand}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
-                            Padding="14,10"
+                            Padding="12,8"
                             CornerRadius="8"
                             FontWeight="SemiBold" />
 
@@ -57,7 +60,7 @@
                             Command="{Binding NavigateToProcessesCommand}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
-                            Padding="14,10"
+                            Padding="12,8"
                             CornerRadius="8"
                             FontWeight="SemiBold" />
 
@@ -65,7 +68,7 @@
                             Command="{Binding NavigateToEventsLogCommand}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
-                            Padding="14,10"
+                            Padding="12,8"
                             CornerRadius="8"
                             FontWeight="SemiBold" />
 
@@ -73,58 +76,67 @@
                             Command="{Binding NavigateToSettingsCommand}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
-                            Padding="14,10"
+                            Padding="12,8"
                             CornerRadius="8"
                             FontWeight="SemiBold" />
                 </StackPanel>
 
-                <!-- Індикатор колірної палітри системних станів у нижній частині Sidebar -->
+                <!-- Індикатор колірної палітри системних станів та швидке перемикання теми у нижній частині Sidebar -->
                 <Border Grid.Row="2"
+                        Classes="subtle-box"
                         CornerRadius="10"
-                        Padding="12,10"
-                        BorderThickness="1"
-                        BorderBrush="#26808080"
-                        Background="#0A808080">
+                        Padding="10,8">
                     <StackPanel Spacing="6">
                         <TextBlock Text="Системні стани"
-                                   FontSize="12"
+                                   FontSize="11"
                                    FontWeight="Bold"
-                                   Opacity="0.8" />
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                   Opacity="0.85" />
+                        <WrapPanel Orientation="Horizontal">
                             <Border CornerRadius="4"
-                                    Padding="6,2"
+                                    Padding="5,2"
+                                    Margin="0,0,4,4"
                                     Background="{StaticResource SystemStateNormalBackgroundBrush}"
                                     BorderBrush="{StaticResource SystemStateNormalBrush}"
                                     BorderThickness="1">
                                 <TextBlock Text="Норма"
                                            Foreground="{StaticResource SystemStateNormalBrush}"
-                                           FontSize="11"
+                                           FontSize="10"
                                            FontWeight="SemiBold" />
                             </Border>
                             <Border CornerRadius="4"
-                                    Padding="6,2"
+                                    Padding="5,2"
+                                    Margin="0,0,4,4"
                                     Background="{StaticResource SystemStateWarningBackgroundBrush}"
                                     BorderBrush="{StaticResource SystemStateWarningBrush}"
                                     BorderThickness="1">
                                 <TextBlock Text="Увага"
                                            Foreground="{StaticResource SystemStateWarningBrush}"
-                                           FontSize="11"
+                                           FontSize="10"
                                            FontWeight="SemiBold" />
                             </Border>
                             <Border CornerRadius="4"
-                                    Padding="6,2"
+                                    Padding="5,2"
+                                    Margin="0,0,0,4"
                                     Background="{StaticResource SystemStateCriticalBackgroundBrush}"
                                     BorderBrush="{StaticResource SystemStateCriticalBrush}"
                                     BorderThickness="1">
                                 <TextBlock Text="Критично"
                                            Foreground="{StaticResource SystemStateCriticalBrush}"
-                                           FontSize="11"
+                                           FontSize="10"
                                            FontWeight="SemiBold" />
                             </Border>
-                        </StackPanel>
+                        </WrapPanel>
                         <TextBlock Text="{Binding Settings.PollingIntervalFormatted, StringFormat='Опитування: {0}'}"
                                    FontSize="11"
-                                   Opacity="0.65" />
+                                   Opacity="0.7" />
+                        <Button Content="{Binding Settings.SelectedTheme, StringFormat='Тема: {0}'}"
+                                Command="{Binding Settings.ToggleThemeCommand}"
+                                ToolTip.Tip="Динамічне перемикання теми (Dark / Light)"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Padding="8,5"
+                                CornerRadius="6"
+                                FontSize="11" />
                     </StackPanel>
                 </Border>
 
@@ -133,41 +145,38 @@
 
         <!-- Робоча область (Dashboard) -->
         <Grid Grid.Column="1"
-              RowDefinitions="Auto,*"
-              RowSpacing="16"
-              Margin="20">
+              RowDefinitions="Auto,Auto,*"
+              RowSpacing="12"
+              Margin="14">
 
             <!-- Верхня панель поточної вкладки -->
             <Border Grid.Row="0"
-                    CornerRadius="12"
-                    Padding="18,14"
-                    BorderThickness="1"
-                    BorderBrush="#26808080"
-                    Background="#0A808080">
+                    Classes="dashboard-card"
+                    Padding="14,10">
                 <Grid ColumnDefinitions="*,Auto"
-                      ColumnSpacing="16">
-                    <StackPanel Grid.Column="0" Spacing="4">
+                      ColumnSpacing="12">
+                    <StackPanel Grid.Column="0" Spacing="2">
                         <TextBlock Text="{Binding CurrentSectionTitle}"
-                                   FontSize="22"
+                                   FontSize="20"
                                    FontWeight="Bold" />
                         <TextBlock Text="{Binding CurrentSectionSubtitle}"
-                                   FontSize="13"
-                                   Opacity="0.7"
+                                   FontSize="12"
+                                   Opacity="0.75"
                                    TextWrapping="Wrap" />
                     </StackPanel>
 
                     <Border Grid.Column="1"
                             CornerRadius="8"
-                            Padding="12,6"
+                            Padding="10,5"
                             VerticalAlignment="Center"
                             Background="{Binding Overview.CpuStateBackgroundBrush}"
                             BorderBrush="{Binding Overview.CpuStateBrush}"
                             BorderThickness="1">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Статус вузла:"
-                                       FontSize="12"
+                                       FontSize="11"
                                        VerticalAlignment="Center"
-                                       Opacity="0.8" />
+                                       Opacity="0.85" />
                             <TextBlock Text="{Binding Overview.CpuStateLabel}"
                                        Foreground="{Binding Overview.CpuStateBrush}"
                                        FontSize="12"
@@ -178,8 +187,44 @@
                 </Grid>
             </Border>
 
-            <!-- Контейнер активного представлення (OverviewView / ProcessesView / SettingsView) -->
-            <ContentControl Grid.Row="1"
+            <!-- Ненав'язливий компонент InfoBar для виведення помилок провайдерів без падіння вікна (Issue #11) -->
+            <Border Grid.Row="1"
+                    Classes="infobar-error"
+                    IsVisible="{Binding Overview.HasProviderError}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <Border Grid.Column="0"
+                            CornerRadius="5"
+                            Padding="7,3"
+                            VerticalAlignment="Center"
+                            Background="{StaticResource SystemStateCriticalBackgroundBrush}"
+                            BorderBrush="{StaticResource SystemStateCriticalBrush}"
+                            BorderThickness="1">
+                        <TextBlock Text="InfoBar"
+                                   Foreground="{StaticResource SystemStateCriticalBrush}"
+                                   FontSize="11"
+                                   FontWeight="Bold" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Overview.ProviderErrorTitle}"
+                                   FontSize="12"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource SystemStateCriticalBrush}" />
+                        <TextBlock Text="{Binding Overview.ProviderErrorMessage}"
+                                   FontSize="12"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button Grid.Column="2"
+                            Content="Закрити"
+                            Command="{Binding Overview.DismissProviderErrorCommand}"
+                            VerticalAlignment="Center"
+                            Padding="10,4"
+                            CornerRadius="6"
+                            FontSize="11" />
+                </Grid>
+            </Border>
+
+            <!-- Контейнер активного представлення (OverviewView / ProcessesView / EventsLogView / SettingsView) -->
+            <ContentControl Grid.Row="2"
                             Content="{Binding CurrentViewModel}"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"

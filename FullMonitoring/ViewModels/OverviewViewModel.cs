@@ -2,6 +2,8 @@ using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -20,7 +22,9 @@ namespace FullMonitoring.ViewModels;
 /// <summary>
 /// Модель представлення для вкладки загального огляду системи (Dashboard).
 /// Формує зведені картки показників CPU, RAM, накопичувачів (Disk) та мережі (Network),
-/// а також забезпечує візуалізацію динаміки навантаження в реальному часі через LiveCharts2 та <see cref="DispatcherTimer"/>.
+/// забезпечує візуалізацію динаміки навантаження в реальному часі через LiveCharts2 та <see cref="DispatcherTimer"/>,
+/// а також підтримує стани первинного завантаження (Skeleton/Spinner), індикацію обмежень політики безпеки ОС
+/// та ненав'язливі повідомлення про помилки провайдерів (InfoBar) (Issue #3, Issue #7, Issue #11).
 /// </summary>
 public partial class OverviewViewModel : ViewModelBase, IDisposable
 {
@@ -67,20 +71,29 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     private static readonly SolidColorPaint CriticalSlicePaint =
         new(SKColor.Parse(SystemStatePalette.CriticalHex));
 
-    private static readonly SolidColorPaint FreeRamSlicePaint =
-        new(new SKColor(128, 128, 128, 55));
+    // Висококонтрастні пензлі осей та вільного сегмента RAM для світлої та темної тем (Issue #11)
+    private static readonly SolidColorPaint DarkAxisLabelsPaint =
+        new(SKColor.Parse(SystemStatePalette.DarkSecondaryTextHex));
 
-    private static readonly SolidColorPaint AxisLabelsPaint =
-        new(new SKColor(150, 150, 150, 210));
+    private static readonly SolidColorPaint LightAxisLabelsPaint =
+        new(SKColor.Parse(SystemStatePalette.LightSecondaryTextHex));
 
     private static readonly SolidColorPaint AxisSeparatorsPaint =
-        new(new SKColor(128, 128, 128, 35)) { StrokeThickness = 1f };
+        new(new SKColor(128, 128, 128, 45)) { StrokeThickness = 1f };
+
+    private static readonly SolidColorPaint DarkFreeRamSlicePaint =
+        new(new SKColor(148, 163, 184, 70));
+
+    private static readonly SolidColorPaint LightFreeRamSlicePaint =
+        new(new SKColor(100, 116, 139, 65));
 
     private readonly ITelemetryProvider _telemetryProvider;
     private readonly DispatcherTimer _pollingTimer;
     private readonly LineSeries<double> _cpuLineSeries;
     private readonly PieSeries<ObservableValue> _ramUsedPieSeries;
     private readonly PieSeries<ObservableValue> _ramFreePieSeries;
+    private readonly Axis _cpuXAxis;
+    private readonly Axis _cpuYAxis;
     private bool _disposed;
 
     [ObservableProperty]
@@ -100,6 +113,45 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
 
     [ObservableProperty]
     private string _lastUpdatedFormatted = string.Empty;
+
+    // --- Стан первинної ініціалізації (Skeleton / Spinner) та обробка помилок провайдера (InfoBar) (Issue #11) ---
+
+    [ObservableProperty]
+    private bool _isInitialLoading = true;
+
+    [ObservableProperty]
+    private bool _isFirstSnapshotLoaded;
+
+    [ObservableProperty]
+    private bool _hasProviderError;
+
+    [ObservableProperty]
+    private string _providerErrorTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _providerErrorMessage = string.Empty;
+
+    // --- Індикатори обмеження доступу політикою безпеки ОС (Issue #11) ---
+
+    [ObservableProperty]
+    private bool _isCpuTemperatureRestricted;
+
+    [ObservableProperty]
+    private string _cpuTemperatureRestrictionTooltip = SystemStatePalette.OsSecurityPolicyRestrictedText;
+
+    [ObservableProperty]
+    private bool _isCpuFanSpeedRestricted;
+
+    [ObservableProperty]
+    private string _cpuFanSpeedRestrictionTooltip = SystemStatePalette.OsSecurityPolicyRestrictedText;
+
+    [ObservableProperty]
+    private bool _hasRestrictedMetrics;
+
+    /// <summary>
+    /// Стандартний текст візуальної підказки для метрик, доступ до яких обмежено правами ОС.
+    /// </summary>
+    public string OsSecurityRestrictionText => SystemStatePalette.OsSecurityPolicyRestrictedText;
 
     // --- Таймер опитування (DispatcherTimer) ---
 
@@ -277,7 +329,7 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     /// Ініціалізує новий екземпляр <see cref="OverviewViewModel"/> з використанням симулятора за замовчуванням.
     /// </summary>
     public OverviewViewModel()
-        : this(new MockTelemetryProvider(), autoStartPolling: true)
+        : this(new MockTelemetryProvider(), autoStartPolling: true, deferInitialCollection: false)
     {
     }
 
@@ -286,7 +338,14 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     /// </summary>
     /// <param name="telemetryProvider">Провайдер системної телеметрії.</param>
     /// <param name="autoStartPolling">Чи запускати <see cref="DispatcherTimer"/> автоматично після ініціалізації.</param>
-    public OverviewViewModel(ITelemetryProvider telemetryProvider, bool autoStartPolling = true)
+    /// <param name="deferInitialCollection">
+    /// Якщо <c>true</c>, перший збір метрик не виконується синхронно в конструкторі, а залишає активним індикатор
+    /// завантаження <see cref="IsInitialLoading"/> (Skeleton / Spinner) до першого оновлення.
+    /// </param>
+    public OverviewViewModel(
+        ITelemetryProvider telemetryProvider,
+        bool autoStartPolling = true,
+        bool deferInitialCollection = false)
     {
         _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
         ProviderName = _telemetryProvider.ProviderName;
@@ -305,37 +364,35 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
 
         CpuSeries = new ISeries[] { _cpuLineSeries };
 
-        CpuXAxes = new[]
+        _cpuXAxis = new Axis
         {
-            new Axis
+            MinLimit = 0,
+            MaxLimit = CpuHistoryCapacity - 1,
+            TextSize = 10,
+            LabelsPaint = LightAxisLabelsPaint,
+            SeparatorsPaint = AxisSeparatorsPaint,
+            ShowSeparatorLines = false,
+            Labeler = value =>
             {
-                MinLimit = 0,
-                MaxLimit = CpuHistoryCapacity - 1,
-                TextSize = 10,
-                LabelsPaint = AxisLabelsPaint,
-                SeparatorsPaint = AxisSeparatorsPaint,
-                ShowSeparatorLines = false,
-                Labeler = value =>
-                {
-                    int secondsAgo = Math.Max(0, (CpuHistoryCapacity - 1) - (int)Math.Round(value));
-                    return secondsAgo == 0 ? "0 с" : $"-{secondsAgo} с";
-                }
+                int secondsAgo = Math.Max(0, (CpuHistoryCapacity - 1) - (int)Math.Round(value));
+                return secondsAgo == 0 ? "0 с" : $"-{secondsAgo} с";
             }
         };
 
-        CpuYAxes = new[]
+        CpuXAxes = new[] { _cpuXAxis };
+
+        _cpuYAxis = new Axis
         {
-            new Axis
-            {
-                MinLimit = 0,
-                MaxLimit = 100,
-                MinStep = 25,
-                TextSize = 10,
-                LabelsPaint = AxisLabelsPaint,
-                SeparatorsPaint = AxisSeparatorsPaint,
-                Labeler = value => string.Create(CultureInfo.InvariantCulture, $"{value:F0}%")
-            }
+            MinLimit = 0,
+            MaxLimit = 100,
+            MinStep = 25,
+            TextSize = 10,
+            LabelsPaint = LightAxisLabelsPaint,
+            SeparatorsPaint = AxisSeparatorsPaint,
+            Labeler = value => string.Create(CultureInfo.InvariantCulture, $"{value:F0}%")
         };
+
+        CpuYAxes = new[] { _cpuYAxis };
 
         _ramUsedPieSeries = new PieSeries<ObservableValue>
         {
@@ -351,7 +408,7 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
             Name = "Вільно",
             Values = new[] { RamFreeChartValue },
             InnerRadius = 38,
-            Fill = FreeRamSlicePaint,
+            Fill = LightFreeRamSlicePaint,
             HoverPushout = 0
         };
 
@@ -364,7 +421,10 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
             OnPollingTimerTick);
         _pollingTimer.Stop();
 
-        RefreshMetrics();
+        if (!deferInitialCollection)
+        {
+            RefreshMetrics();
+        }
 
         if (autoStartPolling)
         {
@@ -382,6 +442,64 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         }
 
         _pollingTimer.Interval = TimeSpan.FromMilliseconds(clamped);
+    }
+
+    /// <summary>
+    /// Переводить представлення у стан первинного завантаження (відображення Skeleton / Spinner).
+    /// </summary>
+    public void BeginInitialLoading()
+    {
+        IsInitialLoading = true;
+        IsFirstSnapshotLoaded = false;
+    }
+
+    /// <summary>
+    /// Асинхронно виконує перший або позачерговий збір метрик із підтримкою індикатора завантаження та обробки помилок.
+    /// </summary>
+    public async Task RefreshMetricsAsync(CancellationToken cancellationToken = default)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        try
+        {
+            var snapshot = await _telemetryProvider.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
+            ExecuteOnUiThread(() => ApplySnapshot(snapshot));
+        }
+        catch (OperationCanceledException)
+        {
+            // Очікуване скасування операції
+        }
+        catch (Exception ex)
+        {
+            ExecuteOnUiThread(() => ReportProviderError(ex));
+        }
+    }
+
+    /// <summary>
+    /// Закриває ненав'язливе повідомлення про помилку провайдера (InfoBar).
+    /// </summary>
+    [RelayCommand]
+    public void DismissProviderError()
+    {
+        HasProviderError = false;
+        ProviderErrorTitle = string.Empty;
+        ProviderErrorMessage = string.Empty;
+    }
+
+    /// <summary>
+    /// Оновлює контрастні пензлі осей та сегментів графіків при перемиканні між темною та світлою темами.
+    /// </summary>
+    public void ApplyThemeVariant(bool isDarkTheme)
+    {
+        var targetLabelsPaint = isDarkTheme ? DarkAxisLabelsPaint : LightAxisLabelsPaint;
+        var targetFreeSlicePaint = isDarkTheme ? DarkFreeRamSlicePaint : LightFreeRamSlicePaint;
+
+        _cpuXAxis.LabelsPaint = targetLabelsPaint;
+        _cpuYAxis.LabelsPaint = targetLabelsPaint;
+        _ramFreePieSeries.Fill = targetFreeSlicePaint;
     }
 
     /// <summary>
@@ -428,7 +546,7 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Оновлює всі показники зведених карток (CPU, RAM, Disk, Network) та графіків зі знімка телеметрії.
-    /// Якщо викликано з фонового потоку, автоматично маршалізує оновлення колекцій у UI-потік.
+    /// Якщо провайдер генерує виняток, помилка перехоплюється та виводиться в InfoBar без падіння вікна.
     /// </summary>
     [RelayCommand]
     public void RefreshMetrics()
@@ -438,14 +556,26 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        var snapshot = _telemetryProvider.GetSnapshot();
-        if (Dispatcher.UIThread.CheckAccess())
+        try
         {
-            ApplySnapshot(snapshot);
+            var snapshot = _telemetryProvider.GetSnapshot();
+            ExecuteOnUiThread(() => ApplySnapshot(snapshot));
+        }
+        catch (Exception ex)
+        {
+            ExecuteOnUiThread(() => ReportProviderError(ex));
+        }
+    }
+
+    private static void ExecuteOnUiThread(Action action)
+    {
+        if (Avalonia.Application.Current is null || Dispatcher.UIThread.CheckAccess())
+        {
+            action();
         }
         else
         {
-            Dispatcher.UIThread.Post(() => ApplySnapshot(snapshot), DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(action, DispatcherPriority.Background);
         }
     }
 
@@ -469,12 +599,24 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         CpuCoreCount = snapshot.Cpu.CoreUsagesPercentage.Count > 0
             ? snapshot.Cpu.CoreUsagesPercentage.Count
             : Environment.ProcessorCount;
+
+        IsCpuTemperatureRestricted = !snapshot.Cpu.TemperatureCelsius.HasValue;
+        CpuTemperatureRestrictionTooltip = IsCpuTemperatureRestricted
+            ? SystemStatePalette.OsSecurityPolicyRestrictedText
+            : "Датчик температури CPU доступний";
         CpuTemperatureFormatted = snapshot.Cpu.TemperatureCelsius.HasValue
             ? string.Create(CultureInfo.InvariantCulture, $"{snapshot.Cpu.TemperatureCelsius.Value:F1} °C")
             : "Н/Д";
+
+        IsCpuFanSpeedRestricted = !snapshot.Cpu.FanSpeedRpm.HasValue;
+        CpuFanSpeedRestrictionTooltip = IsCpuFanSpeedRestricted
+            ? SystemStatePalette.OsSecurityPolicyRestrictedText
+            : "Датчик обертів кулера доступний";
         CpuFanSpeedFormatted = snapshot.Cpu.FanSpeedRpm.HasValue
             ? string.Create(CultureInfo.InvariantCulture, $"{snapshot.Cpu.FanSpeedRpm.Value:F0} об/хв")
             : "Н/Д";
+
+        HasRestrictedMetrics = IsCpuTemperatureRestricted || IsCpuFanSpeedRestricted;
 
         var cpuLoadState = SystemStatePalette.EvaluateByPercentage(CpuUsagePercentage);
         var cpuTempState = SystemStatePalette.EvaluateByTemperature(snapshot.Cpu.TemperatureCelsius);
@@ -537,6 +679,23 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         NetworkStateLabel = SystemStatePalette.GetDisplayName(NetworkState);
         NetworkStateBrush = SystemStatePalette.GetBrush(NetworkState);
         NetworkStateBackgroundBrush = SystemStatePalette.GetBackgroundBrush(NetworkState);
+
+        // Завершення стану первинного завантаження (приховування Skeleton / Spinner)
+        IsFirstSnapshotLoaded = true;
+        IsInitialLoading = false;
+    }
+
+    /// <summary>
+    /// Реєструє помилку провайдера телеметрії для відображення у ненав'язливому компоненті InfoBar.
+    /// </summary>
+    public void ReportProviderError(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+
+        HasProviderError = true;
+        ProviderErrorTitle = "Помилка провайдера телеметрії";
+        ProviderErrorMessage = $"Провайдер «{_telemetryProvider.ProviderName}» повідомив про збій: {exception.Message}";
+        IsInitialLoading = false;
     }
 
     /// <summary>

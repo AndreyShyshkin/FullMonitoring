@@ -14,26 +14,24 @@
     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">
         <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
-              RowSpacing="16"
+              RowSpacing="14"
               Margin="4">
 
             <!-- 1. Налаштування інтервалу опитування телеметрії -->
             <Border Grid.Row="0"
-                    CornerRadius="12"
-                    Padding="20"
-                    BorderThickness="1"
-                    BorderBrush="#26808080"
-                    Background="#0A808080">
+                    Classes="dashboard-card"
+                    Padding="18">
                 <Grid RowDefinitions="Auto,Auto,Auto"
-                      RowSpacing="14">
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                      RowSpacing="12">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
                         <StackPanel Grid.Column="0" Spacing="4">
                             <TextBlock Text="Інтервал опитування сенсорів"
-                                       FontSize="16"
+                                       FontSize="15"
                                        FontWeight="Bold" />
                             <TextBlock Text="Визначає частоту оновлення показників CPU, RAM, дискової підсистеми та мережі"
                                        FontSize="12"
-                                       Opacity="0.65" />
+                                       Opacity="0.7"
+                                       TextWrapping="Wrap" />
                         </StackPanel>
                         <Border Grid.Column="1"
                                 CornerRadius="6"
@@ -59,7 +57,7 @@
                         <TextBlock Grid.Column="0"
                                    Text="Швидкий вибір інтервалу (мс):"
                                    VerticalAlignment="Center"
-                                   Opacity="0.75" />
+                                   Opacity="0.8" />
                         <ComboBox Grid.Column="1"
                                   ItemsSource="{Binding AvailablePollingIntervalsMs}"
                                   SelectedItem="{Binding PollingIntervalMs}"
@@ -70,21 +68,19 @@
 
             <!-- 2. Налаштування теми оформлення (Світла / Темна / Системна) -->
             <Border Grid.Row="1"
-                    CornerRadius="12"
-                    Padding="20"
-                    BorderThickness="1"
-                    BorderBrush="#26808080"
-                    Background="#0A808080">
+                    Classes="dashboard-card"
+                    Padding="18">
                 <Grid RowDefinitions="Auto,Auto"
-                      RowSpacing="14">
-                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                      RowSpacing="12">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
                         <StackPanel Grid.Column="0" Spacing="4">
-                            <TextBlock Text="Тема оформлення інтерфейсу"
-                                       FontSize="16"
+                            <TextBlock Text="Тема оформлення інтерфейсу (Dark / Light)"
+                                       FontSize="15"
                                        FontWeight="Bold" />
-                            <TextBlock Text="Перемикання між світлою, темною та системною кольоровою схемою застосунку"
+                            <TextBlock Text="Динамічне перемикання між світлою, темною та системною кольоровою схемою через стилі Avalonia"
                                        FontSize="12"
-                                       Opacity="0.65" />
+                                       Opacity="0.7"
+                                       TextWrapping="Wrap" />
                         </StackPanel>
                         <ComboBox Grid.Column="1"
                                   ItemsSource="{Binding AvailableThemes}"
@@ -93,18 +89,23 @@
                     </Grid>
 
                     <WrapPanel Grid.Row="1" Orientation="Horizontal">
-                        <Button Content="Світла тема"
+                        <Button Content="Світла тема (Light)"
                                 Command="{Binding SetLightThemeCommand}"
                                 Padding="14,8"
                                 Margin="0,0,10,6"
                                 CornerRadius="6" />
-                        <Button Content="Темна тема"
+                        <Button Content="Темна тема (Dark)"
                                 Command="{Binding SetDarkThemeCommand}"
                                 Padding="14,8"
                                 Margin="0,0,10,6"
                                 CornerRadius="6" />
                         <Button Content="Системна тема"
                                 Command="{Binding SetSystemThemeCommand}"
+                                Padding="14,8"
+                                Margin="0,0,10,6"
+                                CornerRadius="6" />
+                        <Button Content="Перемкнути Dark / Light"
+                                Command="{Binding ToggleThemeCommand}"
                                 Padding="14,8"
                                 Margin="0,0,0,6"
                                 CornerRadius="6" />
@@ -114,29 +115,27 @@
 
             <!-- 3. Довідник колірної палітри системних станів -->
             <Border Grid.Row="2"
-                    CornerRadius="12"
-                    Padding="20"
-                    BorderThickness="1"
-                    BorderBrush="#26808080"
-                    Background="#0A808080">
+                    Classes="dashboard-card"
+                    Padding="18">
                 <Grid RowDefinitions="Auto,Auto"
-                      RowSpacing="14">
+                      RowSpacing="12">
                     <StackPanel Grid.Row="0" Spacing="4">
-                        <TextBlock Text="Колірна палітра системних станів"
-                                   FontSize="16"
+                        <TextBlock Text="Колірна палітра системних станів (WCAG 2.1 AA)"
+                                   FontSize="15"
                                    FontWeight="Bold" />
-                        <TextBlock Text="Уніфікована індикація стану навантаження та температур вузлів системи"
+                        <TextBlock Text="Уніфікована індикація стану навантаження та температур вузлів системи з перевіреною контрастністю"
                                    FontSize="12"
-                                   Opacity="0.65" />
+                                   Opacity="0.7"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
 
                     <Grid Grid.Row="1"
                           ColumnDefinitions="*,*,*"
-                          ColumnSpacing="12">
+                          ColumnSpacing="10">
                         <!-- Нормальний стан -->
                         <Border Grid.Column="0"
                                 CornerRadius="8"
-                                Padding="14,12"
+                                Padding="12,10"
                                 Background="{StaticResource SystemStateNormalBackgroundBrush}"
                                 BorderBrush="{StaticResource SystemStateNormalBrush}"
                                 BorderThickness="1">
@@ -154,7 +153,7 @@
                         <!-- Попередження -->
                         <Border Grid.Column="1"
                                 CornerRadius="8"
-                                Padding="14,12"
+                                Padding="12,10"
                                 Background="{StaticResource SystemStateWarningBackgroundBrush}"
                                 BorderBrush="{StaticResource SystemStateWarningBrush}"
                                 BorderThickness="1">
@@ -172,7 +171,7 @@
                         <!-- Критичний стан -->
                         <Border Grid.Column="2"
                                 CornerRadius="8"
-                                Padding="14,12"
+                                Padding="12,10"
                                 Background="{StaticResource SystemStateCriticalBackgroundBrush}"
                                 BorderBrush="{StaticResource SystemStateCriticalBrush}"
                                 BorderThickness="1">
@@ -192,38 +191,33 @@
 
             <!-- 4. Порогові сповіщення про критичне навантаження (Issue #8) -->
             <Border Grid.Row="3"
-                    CornerRadius="12"
-                    Padding="20"
-                    BorderThickness="1"
-                    BorderBrush="#26808080"
-                    Background="#0A808080">
-                <Grid RowDefinitions="Auto,Auto" RowSpacing="16">
+                    Classes="dashboard-card"
+                    Padding="18">
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="14">
                     <StackPanel Grid.Row="0" Spacing="4">
                         <TextBlock Text="Порогові сповіщення про критичне навантаження"
-                                   FontSize="16"
+                                   FontSize="15"
                                    FontWeight="Bold" />
                         <TextBlock Text="Конфігурація граничних лімітів спрацьовування та відстеження тривалості (Issue #8)"
                                    FontSize="12"
-                                   Opacity="0.65" />
+                                   Opacity="0.7"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
 
                     <Grid Grid.Row="1"
                           ColumnDefinitions="*,*,*,*"
-                          ColumnSpacing="14">
+                          ColumnSpacing="10">
 
                         <!-- Поріг CPU -->
                         <Border Grid.Column="0"
-                                CornerRadius="8"
-                                Padding="12"
-                                BorderThickness="1"
-                                BorderBrush="#26808080"
-                                Background="#08808080">
+                                Classes="subtle-box"
+                                Padding="10">
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Поріг CPU (%)"
                                            FontSize="12"
-                                           Opacity="0.8" />
+                                           Opacity="0.85" />
                                 <TextBlock Text="{Binding CpuThresholdPercentage, StringFormat='{}{0:F0} %'}"
-                                           FontSize="18"
+                                           FontSize="17"
                                            FontWeight="Bold"
                                            Foreground="{StaticResource SystemStateCriticalBrush}" />
                                 <Slider Minimum="10" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
@@ -233,17 +227,14 @@
 
                         <!-- Поріг температури -->
                         <Border Grid.Column="1"
-                                CornerRadius="8"
-                                Padding="12"
-                                BorderThickness="1"
-                                BorderBrush="#26808080"
-                                Background="#08808080">
+                                Classes="subtle-box"
+                                Padding="10">
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Поріг темп. (°C)"
                                            FontSize="12"
-                                           Opacity="0.8" />
+                                           Opacity="0.85" />
                                 <TextBlock Text="{Binding CpuTemperatureThresholdCelsius, StringFormat='{}{0:F0} °C'}"
-                                           FontSize="18"
+                                           FontSize="17"
                                            FontWeight="Bold"
                                            Foreground="{StaticResource SystemStateCriticalBrush}" />
                                 <Slider Minimum="40" Maximum="110" TickFrequency="5" IsSnapToTickEnabled="True"
@@ -253,17 +244,14 @@
 
                         <!-- Поріг RAM -->
                         <Border Grid.Column="2"
-                                CornerRadius="8"
-                                Padding="12"
-                                BorderThickness="1"
-                                BorderBrush="#26808080"
-                                Background="#08808080">
+                                Classes="subtle-box"
+                                Padding="10">
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Поріг RAM (%)"
                                            FontSize="12"
-                                           Opacity="0.8" />
+                                           Opacity="0.85" />
                                 <TextBlock Text="{Binding RamThresholdPercentage, StringFormat='{}{0:F0} %'}"
-                                           FontSize="18"
+                                           FontSize="17"
                                            FontWeight="Bold"
                                            Foreground="{StaticResource SystemStateCriticalBrush}" />
                                 <Slider Minimum="10" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True"
@@ -273,17 +261,14 @@
 
                         <!-- Тривалість перевантаження -->
                         <Border Grid.Column="3"
-                                CornerRadius="8"
-                                Padding="12"
-                                BorderThickness="1"
-                                BorderBrush="#26808080"
-                                Background="#08808080">
+                                Classes="subtle-box"
+                                Padding="10">
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Тривалість (с)"
                                            FontSize="12"
-                                           Opacity="0.8" />
+                                           Opacity="0.85" />
                                 <TextBlock Text="{Binding DurationThresholdSeconds, StringFormat='{}{0:F1} с'}"
-                                           FontSize="18"
+                                           FontSize="17"
                                            FontWeight="Bold" />
                                 <Slider Minimum="1" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True"
                                         Value="{Binding DurationThresholdSeconds}" />
@@ -295,21 +280,19 @@
 
             <!-- 5. Нижня панель статусу та скидання налаштувань -->
             <Border Grid.Row="4"
-                    CornerRadius="10"
-                    Padding="16,12"
-                    BorderThickness="1"
-                    BorderBrush="#26808080"
-                    Background="#0D808080">
+                    Classes="dashboard-card"
+                    Padding="14,10">
                 <Grid ColumnDefinitions="*,Auto"
                       ColumnSpacing="12">
                     <TextBlock Grid.Column="0"
                                Text="{Binding StatusMessage}"
                                VerticalAlignment="Center"
-                               Opacity="0.8" />
+                               Opacity="0.85"
+                               TextWrapping="Wrap" />
                     <Button Grid.Column="1"
                             Content="Скинути за замовчуванням"
                             Command="{Binding ResetDefaultsCommand}"
-                            Padding="14,7"
+                            Padding="12,6"
                             CornerRadius="6" />
                 </Grid>
             </Border>
