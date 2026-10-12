@@ -466,14 +466,7 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         try
         {
             var snapshot = await _telemetryProvider.GetSnapshotAsync(cancellationToken).ConfigureAwait(false);
-            if (Dispatcher.UIThread.CheckAccess())
-            {
-                ApplySnapshot(snapshot);
-            }
-            else
-            {
-                Dispatcher.UIThread.Post(() => ApplySnapshot(snapshot), DispatcherPriority.Background);
-            }
+            ExecuteOnUiThread(() => ApplySnapshot(snapshot));
         }
         catch (OperationCanceledException)
         {
@@ -481,7 +474,7 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            ReportProviderError(ex);
+            ExecuteOnUiThread(() => ReportProviderError(ex));
         }
     }
 
@@ -566,18 +559,23 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         try
         {
             var snapshot = _telemetryProvider.GetSnapshot();
-            if (Dispatcher.UIThread.CheckAccess())
-            {
-                ApplySnapshot(snapshot);
-            }
-            else
-            {
-                Dispatcher.UIThread.Post(() => ApplySnapshot(snapshot), DispatcherPriority.Background);
-            }
+            ExecuteOnUiThread(() => ApplySnapshot(snapshot));
         }
         catch (Exception ex)
         {
-            ReportProviderError(ex);
+            ExecuteOnUiThread(() => ReportProviderError(ex));
+        }
+    }
+
+    private static void ExecuteOnUiThread(Action action)
+    {
+        if (Avalonia.Application.Current is null || Dispatcher.UIThread.CheckAccess())
+        {
+            action();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(action, DispatcherPriority.Background);
         }
     }
 
