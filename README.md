@@ -29,7 +29,16 @@
         - `/proc/meminfo` — загальний і доступний обсяг RAM (`MemTotal`, `MemAvailable`);
         - `/sys/class/hwmon/` — рекурсивний пошук датчиків температури та швидкості обертання вентиляторів.
       Розбір рядків виконується над `ReadOnlySpan<char>` для мінімізації аллокацій у GC, а відсутність файлів (віртуальні машини, контейнери) не призводить до падіння.
-    - `MacOsProvider` — `sysctl` (P/Invoke) / Fallback-метрики для Apple Silicon.
+    - `MacOsTelemetryProvider` — нативний читач `sysctlbyname` (P/Invoke до `libc`) із чесним fallback на BCL-метрики:
+        - `MacOsSysctlReader` — безпечна обгортка ключів `hw.memsize`, `hw.logicalcpu`, `machdep.cpu.brand_string` (на не-macOS повертає `false` без винятків);
+        - загальний обсяг RAM уточнюється через `hw.memsize`, кількість ядер — через `hw.logicalcpu`;
+        - температура CPU та оберти кулера повертають `null` (доступ до SMC обмежено політикою безпеки macOS) — UI показує бейдж `«Заблоковано політикою безпеки ОС»`.
+3. **Механізм платформової резолюції (DI):**
+    - `TelemetryServiceRegistration` — розширення `IServiceCollection.AddFullMonitoringPlatformServices()` для `Microsoft.Extensions.DependencyInjection`.
+    - Резолюція `ITelemetryProvider` через `RuntimeInformation.IsOSPlatform`: `Windows` → `WindowsTelemetryProvider`, `Linux` → `LinuxTelemetryProvider`, `OSX` → `MacOsTelemetryProvider`, інакше — `BclTelemetryProvider`.
+    - `CreateTelemetryProviderForCurrentOs()` — фабрика з безпечним fallback: якщо платформо-специфічний провайдер не створився, повертається базовий `BclTelemetryProvider` (режим Safe Mode без падіння).
+    - `App.axaml.cs` лише будує `ServiceProvider` та розв'язує `MainViewModel`, `ITelemetryProvider`, `IAlertService`; звільнення ресурсів виконується у `OnShutdownRequested`.
+    - `IPlatformInfoService` / `PlatformInfoService` — визначення платформи (`PlatformKind`: Windows / Linux / macOS / Unknown), перевірка прав адміністратора, режим `Safe Mode` та оцінка рівня доступу сенсорів (`SensorAccessLevel`: Full / Limited / Restricted).
 3. **Модуль процесів (Process Monitoring):**
     - `IProcessManagerService` — інтерфейс збору телеметрії та завершення процесів.
     - `ProcessManagerService` — реалізація на базі `System.Diagnostics.Process` (вибірка топ-50 процесів, сортування за спаданням оперативної пам'яті, безпечна обробка системних процесів та метод `KillProcess`).
@@ -46,7 +55,7 @@
         - `AlertIncident` — модель події у журналі (унікальний ідентифікатор, мітка часу, тип метрики, зафіксоване та порогове значення, текстове повідомлення, статус вирішення).
         - Потокобезпечний журнал інцидентів з обмеженням розміру (буфер до 500 записів) та подіями нотифікації UI (`IncidentRaised`, `IncidentResolved`).
 5. **UI Layer та візуалізація в реальному часі (LiveCharts2):** Views та ViewModels не мають прив'язки до поточної ОС. Відображення даних реалізовано через реактивний Data Binding:
-    - `MainWindow` / `MainViewModel` — адаптивний головний каркас (Sidebar + Dashboard, мінімальний розмір `800x600` без перекриття елементів), бейдж кількості інцидентів, ненав'язлива панель сповіщень `InfoBar` для помилок провайдерів, синхронізація інтервалу опитування та теми оформлення.
+    - `MainWindow` / `MainViewModel` — адаптивний головний каркас (Sidebar + Dashboard, мінімальний розмір `800x600` без перекриття елементів), бейдж кількості інцидентів, ненав'язлива панель сповіщень `InfoBar` для помилок провайдерів, синхронізація інтервалу опитування та теми оформлення, а також статус-бар платформи (`Платформа`, `Джерело`, `Сенсори`, `Безпечний режим (Safe Mode)` із прив'язкою до `IPlatformInfoService` та `RefreshPlatformStatus()`).
     - `OverviewView` / `OverviewViewModel` — зведені картки метрик CPU, RAM, Disk, Network із графіками в реальному часі:
         - Індикатори первинного завантаження (`Skeleton / Spinner`, `IsInitialLoading`), поки триває перший збір метрик при старті програми.
         - Візуальні підказки та бейджі `«Заблоковано політикою безпеки ОС»` для сенсорів (температура CPU, оберти кулера), доступ до яких обмежено правами ОС.
