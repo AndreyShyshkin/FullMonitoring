@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using FullMonitoring.Interfaces;
 using FullMonitoring.Models;
 using FullMonitoring.Providers;
+using FullMonitoring.Services;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView;
@@ -88,6 +89,8 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         new(new SKColor(100, 116, 139, 65));
 
     private readonly ITelemetryProvider _telemetryProvider;
+    private readonly IExportService _exportService;
+    private readonly IFileSaveDialogService _fileSaveDialogService;
     private readonly DispatcherTimer _pollingTimer;
     private readonly LineSeries<double> _cpuLineSeries;
     private readonly PieSeries<ObservableValue> _ramUsedPieSeries;
@@ -95,6 +98,15 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     private readonly Axis _cpuXAxis;
     private readonly Axis _cpuYAxis;
     private bool _disposed;
+
+    [ObservableProperty]
+    private SystemTelemetrySnapshot? _lastSnapshot;
+
+    [ObservableProperty]
+    private bool _isExporting;
+
+    [ObservableProperty]
+    private string _exportStatusMessage = string.Empty;
 
     [ObservableProperty]
     private string _providerName = string.Empty;
@@ -336,18 +348,32 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Ініціалізує новий екземпляр <see cref="OverviewViewModel"/> із заданим провайдером телеметрії.
     /// </summary>
-    /// <param name="telemetryProvider">Провайдер системної телеметрії.</param>
-    /// <param name="autoStartPolling">Чи запускати <see cref="DispatcherTimer"/> автоматично після ініціалізації.</param>
-    /// <param name="deferInitialCollection">
-    /// Якщо <c>true</c>, перший збір метрик не виконується синхронно в конструкторі, а залишає активним індикатор
-    /// завантаження <see cref="IsInitialLoading"/> (Skeleton / Spinner) до першого оновлення.
-    /// </param>
     public OverviewViewModel(
         ITelemetryProvider telemetryProvider,
         bool autoStartPolling = true,
         bool deferInitialCollection = false)
+        : this(telemetryProvider, new ExportService(), new AvaloniaStorageFileSaveDialogService(), autoStartPolling, deferInitialCollection)
+    {
+    }
+
+    /// <summary>
+    /// Ініціалізує новий екземпляр <see cref="OverviewViewModel"/> із заданим провайдером телеметрії та сервісами експорту.
+    /// </summary>
+    /// <param name="telemetryProvider">Провайдер системної телеметрії.</param>
+    /// <param name="exportService">Сервіс експорту звіту у JSON/CSV.</param>
+    /// <param name="fileSaveDialogService">Сервіс виклику системного діалогу збереження файлу.</param>
+    /// <param name="autoStartPolling">Чи запускати <see cref="DispatcherTimer"/> автоматично після ініціалізації.</param>
+    /// <param name="deferInitialCollection">Чи відкласти первинний збір метрик.</param>
+    public OverviewViewModel(
+        ITelemetryProvider telemetryProvider,
+        IExportService exportService,
+        IFileSaveDialogService fileSaveDialogService,
+        bool autoStartPolling = true,
+        bool deferInitialCollection = false)
     {
         _telemetryProvider = telemetryProvider ?? throw new ArgumentNullException(nameof(telemetryProvider));
+        _exportService = exportService ?? throw new ArgumentNullException(nameof(exportService));
+        _fileSaveDialogService = fileSaveDialogService ?? throw new ArgumentNullException(nameof(fileSaveDialogService));
         ProviderName = _telemetryProvider.ProviderName;
 
         CpuUsageHistory.FillWithDefault(0.0);
@@ -586,6 +612,7 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     public void ApplySnapshot(SystemTelemetrySnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
+        LastSnapshot = snapshot;
 
         OsDescription = string.IsNullOrWhiteSpace(snapshot.OsDescription) ? "Невідома ОС" : snapshot.OsDescription;
         Architecture = string.IsNullOrWhiteSpace(snapshot.Architecture) ? "Н/Д" : snapshot.Architecture;
@@ -810,6 +837,84 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
 
         double kbps = bytesPerSecond / 1024.0;
         return string.Create(CultureInfo.InvariantCulture, $"{kbps:F1} КБ/с");
+    }
+
+    /// <summary>
+    /// Асинхронно експортує повний зріз телеметрії у файл JSON через системний діалог збереження.
+    /// </summary>
+    [RelayCommand]
+    public async Task ExportReportToJsonAsync()
+    {
+        await ExportReportInternalAsync(ExportFormatOption.Json);
+    }
+
+    /// <summary>
+    /// Асинхронно експортує повний зріз телеметрії у формат CSV (RFC 4180) через системний діалог збереження.
+    /// </summary>
+    [RelayCommand]
+    public async Task ExportReportToCsvAsync()
+    {
+        await ExportReportInternalAsync(ExportFormatOption.Csv);
+    }
+
+    /// <summary>
+    /// Експортує повний звіт телеметрії системи за вказаним шляхом до файлу.
+    /// </summary>
+    public async Task ExportReportToFileAsync(string filePath, ExportFormatOption format)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        IsExporting = true;
+        try
+        {
+            var snapshot = LastSnapshot ?? _telemetryProvider.GetSnapshot();
+            var cpuHistory = CpuUsageHistory.ToArray();
+            var report = TelemetryReport.Create(snapshot, cpuHistory);
+
+            if (format == ExportFormatOption.Csv)
+            {
+                await _exportService.ExportToCsvAsync(filePath, report).ConfigureAwait(false);
+            }
+            else
+            {
+                await _exportService.ExportToJsonAsync(filePath, report).ConfigureAwait(false);
+            }
+
+            ExportStatusMessage = $"Звіт успішно збережено: {System.IO.Path.GetFileName(filePath)}";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private async Task ExportReportInternalAsync(ExportFormatOption format)
+    {
+        try
+        {
+            string ext = format == ExportFormatOption.Csv ? "csv" : "json";
+            string title = format == ExportFormatOption.Csv ? "Експорт звіту телеметрії у CSV" : "Експорт звіту телеметрії у JSON";
+            string fileName = $"telemetry_report_{DateTime.Now:yyyyMMdd_HHmmss}.{ext}";
+
+            var options = new FileSaveDialogOptions
+            {
+                Title = title,
+                DefaultExtension = ext,
+                SuggestedFileName = fileName,
+                Format = format
+            };
+
+            string? chosenPath = await _fileSaveDialogService.ShowSaveFileDialogAsync(options);
+            if (string.IsNullOrWhiteSpace(chosenPath))
+            {
+                return;
+            }
+
+            await ExportReportToFileAsync(chosenPath, format);
+        }
+        catch (Exception ex)
+        {
+            ReportProviderError(ex);
+        }
     }
 
     private static string FormatUptime(TimeSpan uptime)

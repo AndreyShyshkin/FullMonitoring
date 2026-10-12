@@ -67,6 +67,20 @@
                                    Opacity="0.75"
                                    FontSize="12"
                                    Margin="0,0,10,0" />
+                        <Button Content="Експорт звіту ▾"
+                                Padding="12,6"
+                                CornerRadius="6"
+                                Margin="0,0,10,0"
+                                ToolTip.Tip="Експортувати зріз телеметрії системи у JSON або CSV">
+                            <Button.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                    <MenuItem Header="Експорт у JSON (повний зріз)"
+                                              Command="{Binding ExportReportToJsonCommand}" />
+                                    <MenuItem Header="Експорт у CSV (таблиця Excel)"
+                                              Command="{Binding ExportReportToCsvCommand}" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
                         <Button Content="Оновити метрики"
                                 Command="{Binding RefreshMetricsCommand}"
                                 Padding="12,6"

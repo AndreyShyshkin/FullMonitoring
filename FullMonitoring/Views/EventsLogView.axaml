@@ -99,7 +99,7 @@
                 BorderThickness="1"
                 BorderBrush="#26808080"
                 Background="#0D808080">
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto"
                   ColumnSpacing="10">
 
                 <TextBlock Grid.Column="0"
@@ -140,13 +140,29 @@
                 </StackPanel>
 
                 <Button Grid.Column="2"
+                        Content="Експорт ▾"
+                        Padding="14,6"
+                        CornerRadius="6"
+                        FontSize="12"
+                        ToolTip.Tip="Експортувати журнал подій у CSV або JSON">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                            <MenuItem Header="Експорт у CSV (Excel)"
+                                      Command="{Binding ExportToCsvCommand}" />
+                            <MenuItem Header="Експорт у JSON"
+                                      Command="{Binding ExportToJsonCommand}" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+
+                <Button Grid.Column="3"
                         Content="Оновити журнал"
                         Command="{Binding RefreshLogCommand}"
                         Padding="14,6"
                         CornerRadius="6"
                         FontSize="12" />
 
-                <Button Grid.Column="3"
+                <Button Grid.Column="4"
                         Content="Очистити журнал"
                         Command="{Binding ClearLogCommand}"
                         Background="{StaticResource SystemStateCriticalBackgroundBrush}"

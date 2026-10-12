@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -22,7 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FullMonitoring\FullMonitoring.csproj" />
+    <ProjectReference Include="..\FullMonitoring\FullMonitoring.csproj">
+      <SetProperties>OutputType=Library</SetProperties>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

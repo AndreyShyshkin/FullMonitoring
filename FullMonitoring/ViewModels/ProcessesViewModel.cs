@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FullMonitoring.Interfaces;
@@ -47,6 +48,12 @@ public partial class ProcessesViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasProviderError;
 
+    private readonly IExportService _exportService;
+    private readonly IFileSaveDialogService _fileSaveDialogService;
+
+    [ObservableProperty]
+    private bool _isExporting;
+
     [ObservableProperty]
     private string _providerErrorMessage = string.Empty;
 
@@ -69,11 +76,28 @@ public partial class ProcessesViewModel : ViewModelBase
     /// <summary>
     /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> із заданим сервісом процесів.
     /// </summary>
-    /// <param name="processManagerService">Сервіс отримання та завершення процесів.</param>
-    /// <param name="deferInitialCollection">Чи відкласти первинне завантаження списку процесів.</param>
     public ProcessesViewModel(IProcessManagerService processManagerService, bool deferInitialCollection = false)
+        : this(processManagerService, new ExportService(), new AvaloniaStorageFileSaveDialogService(), deferInitialCollection)
+    {
+    }
+
+    /// <summary>
+    /// Ініціалізує новий екземпляр <see cref="ProcessesViewModel"/> із заданим сервісом процесів та сервісами експорту.
+    /// </summary>
+    /// <param name="processManagerService">Сервіс отримання та завершення процесів.</param>
+    /// <param name="exportService">Сервіс експорту даних у JSON/CSV.</param>
+    /// <param name="fileSaveDialogService">Сервіс виклику системного діалогу збереження файлу.</param>
+    /// <param name="deferInitialCollection">Чи відкласти первинне завантаження списку процесів.</param>
+    public ProcessesViewModel(
+        IProcessManagerService processManagerService,
+        IExportService exportService,
+        IFileSaveDialogService fileSaveDialogService,
+        bool deferInitialCollection = false)
     {
         _processManagerService = processManagerService ?? throw new ArgumentNullException(nameof(processManagerService));
+        _exportService = exportService ?? throw new ArgumentNullException(nameof(exportService));
+        _fileSaveDialogService = fileSaveDialogService ?? throw new ArgumentNullException(nameof(fileSaveDialogService));
+
         if (!deferInitialCollection)
         {
             RefreshProcesses();
@@ -83,6 +107,81 @@ public partial class ProcessesViewModel : ViewModelBase
     partial void OnSearchQueryChanged(string value)
     {
         ApplyFilter();
+    }
+
+    /// <summary>
+    /// Асинхронно експортує список процесів у формат CSV (RFC 4180) через системний діалог збереження.
+    /// </summary>
+    [RelayCommand]
+    public async Task ExportToCsvAsync()
+    {
+        await ExportProcessesInternalAsync(ExportFormatOption.Csv);
+    }
+
+    /// <summary>
+    /// Асинхронно експортує список процесів у формат JSON через системний діалог збереження.
+    /// </summary>
+    [RelayCommand]
+    public async Task ExportToJsonAsync()
+    {
+        await ExportProcessesInternalAsync(ExportFormatOption.Json);
+    }
+
+    /// <summary>
+    /// Експортує список процесів за безпосереднім шляхом до файлу.
+    /// </summary>
+    public async Task ExportToFileAsync(string filePath, ExportFormatOption format)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        IsExporting = true;
+        try
+        {
+            var dataToExport = Processes.Count > 0 ? (IEnumerable<ProcessItem>)Processes : _allProcesses;
+            if (format == ExportFormatOption.Csv)
+            {
+                await _exportService.ExportToCsvAsync(filePath, dataToExport).ConfigureAwait(false);
+            }
+            else
+            {
+                await _exportService.ExportProcessesToJsonAsync(filePath, dataToExport).ConfigureAwait(false);
+            }
+            StatusMessage = $"Процеси успішно збережено: {System.IO.Path.GetFileName(filePath)}";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private async Task ExportProcessesInternalAsync(ExportFormatOption format)
+    {
+        try
+        {
+            string ext = format == ExportFormatOption.Csv ? "csv" : "json";
+            string title = format == ExportFormatOption.Csv ? "Експорт процесів у CSV" : "Експорт процесів у JSON";
+            string fileName = $"processes_{DateTime.Now:yyyyMMdd_HHmmss}.{ext}";
+
+            var options = new FileSaveDialogOptions
+            {
+                Title = title,
+                DefaultExtension = ext,
+                SuggestedFileName = fileName,
+                Format = format
+            };
+
+            string? chosenPath = await _fileSaveDialogService.ShowSaveFileDialogAsync(options);
+            if (string.IsNullOrWhiteSpace(chosenPath))
+            {
+                return;
+            }
+
+            await ExportToFileAsync(chosenPath, format);
+        }
+        catch (Exception ex)
+        {
+            HasProviderError = true;
+            ProviderErrorMessage = $"Помилка експорту списку процесів: {ex.Message}";
+        }
     }
 
     /// <summary>

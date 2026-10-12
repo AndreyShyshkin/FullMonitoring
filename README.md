@@ -67,6 +67,17 @@
     - `EventsLogView` / `EventsLogViewModel` — журнал інцидентів із фільтрацією за типами метрик, часовими мітками та очищенням списку.
     - `SettingsView` / `SettingsViewModel` — налаштування інтервалу опитування, динамічне перемикання теми оформлення (`Dark / Light / System` через `ThemeVariant` і `ThemeDictionaries` в `App.axaml`) та порогів навантаження CPU/RAM/температури.
     - `SystemHealthState` / `SystemStatePalette` — фіксована колірна палітра системних станів (нормальний, попередження, критичний) та перевірка контрастності тексту і графіків за стандартом доступності **WCAG 2.1 AA**.
+6. **Сервіс експорту та звітів телеметрії (Export Service & Reports — Issue #12):**
+    - `TelemetryReport` — комплексна модель зрізу телеметрії системи (мітка часу, назва платформи, статус сенсорів, метрики CPU, RAM, накопичувачів, мережі, вибірка процесів та зафіксовані інциденти).
+    - `IExportService` / `ExportService` — асинхронний потокобезпечний сервіс збереження даних:
+        - `ExportToJsonAsync`: форматована JSON-серіалізація (`WriteIndented = true`, camelCase, безпечна підтримка Unicode через `JavaScriptEncoder.UnsafeRelaxedJsonEscaping`).
+        - `ExportToCsvAsync`: збереження табличних даних за стандартом RFC 4180 з додаванням мітки порядку байтів UTF-8 BOM (`new UTF8Encoding(true)`) для безпомилкового відображення кирилиці в Microsoft Excel та LibreOffice Calc; підтримка експорту процесів (`IEnumerable<ProcessItem>`), журналу подій (`IEnumerable<AlertIncident>`) та загального звіту телеметрії.
+    - `IFileSaveDialogService` / `AvaloniaStorageFileSaveDialogService`: інтеграція з нативним діалогом вибору файлу збереження Avalonia через `StorageProvider` (`TopLevel.GetTopLevel(...)?.StorageProvider.SaveFilePickerAsync(...)`) з можливістю підміни у тестах для headless-перевірок.
+    - Інтеграція кнопок експорту в інтерфейс застосунку:
+        - **Дашборд (Overview):** збереження повного системного зрізу телеметрії (`TelemetryReport`) у форматах JSON або CSV.
+        - **Таблиця процесів (Processes):** вивантаження активних процесів у JSON або CSV.
+        - **Журнал подій (Events Log):** вивантаження історії зафіксованих інцидентів у JSON або CSV.
+        - Неблокуюче асинхронне збереження з інформуванням користувача про успіх або помилку через статусний `InfoBar`.
 
 ---
 

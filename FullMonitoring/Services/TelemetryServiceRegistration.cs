@@ -105,14 +105,26 @@ public static class TelemetryServiceRegistration
             provider.GetRequiredService<ITelemetryProvider>(),
             TimeSpan.FromSeconds(1)));
 
+        // Сервіс експорту зрізів телеметрії, процесів та журналу подій у формати JSON/CSV (Issue #12).
+        services.AddSingleton<IExportService, ExportService>();
+
+        // Сервіс взаємодії з нативним діалогом вибору файлу Avalonia StorageProvider (Issue #12).
+        services.AddSingleton<IFileSaveDialogService, AvaloniaStorageFileSaveDialogService>();
+
         // ViewModels вкладок.
         services.AddTransient<OverviewViewModel>(provider => new OverviewViewModel(
-            provider.GetRequiredService<ITelemetryProvider>()));
+            provider.GetRequiredService<ITelemetryProvider>(),
+            provider.GetRequiredService<IExportService>(),
+            provider.GetRequiredService<IFileSaveDialogService>()));
         services.AddTransient<ProcessesViewModel>(provider => new ProcessesViewModel(
-            provider.GetRequiredService<IProcessManagerService>()));
+            provider.GetRequiredService<IProcessManagerService>(),
+            provider.GetRequiredService<IExportService>(),
+            provider.GetRequiredService<IFileSaveDialogService>()));
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<EventsLogViewModel>(provider => new EventsLogViewModel(
-            provider.GetRequiredService<IAlertService>()));
+            provider.GetRequiredService<IAlertService>(),
+            provider.GetRequiredService<IExportService>(),
+            provider.GetRequiredService<IFileSaveDialogService>()));
 
         // Головна ViewModel із статус-баром платформи.
         services.AddSingleton<MainViewModel>(provider => new MainViewModel(
