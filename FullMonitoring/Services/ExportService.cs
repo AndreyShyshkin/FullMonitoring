@@ -296,14 +296,14 @@ public class ExportService : IExportService
             var s = report.Snapshot;
             await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,CpuUsagePercentage,{s.Cpu.TotalUsagePercentage:F1}")).ConfigureAwait(false);
             await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,CpuTemperatureCelsius,{(s.Cpu.TemperatureCelsius.HasValue ? s.Cpu.TemperatureCelsius.Value.ToString("F1", CultureInfo.InvariantCulture) : "N/A")}")).ConfigureAwait(false);
-            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamUsagePercentage,{s.Ram.UsagePercentage:F1}")).ConfigureAwait(false);
-            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamUsedGb,{s.Ram.UsedGigabytes:F2}")).ConfigureAwait(false);
-            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamTotalGb,{s.Ram.TotalGigabytes:F2}")).ConfigureAwait(false);
-            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskUsagePercentage,{s.Disk.TotalUsagePercentage:F1}")).ConfigureAwait(false);
-            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskUsedGb,{s.Disk.UsedGigabytes:F2}")).ConfigureAwait(false);
-            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskTotalGb,{s.Disk.TotalGigabytes:F2}")).ConfigureAwait(false);
-            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,NetworkRxSpeedBytesPerSec,{s.Network.TotalRxSpeedBytesPerSec}")).ConfigureAwait(false);
-            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,NetworkTxSpeedBytesPerSec,{s.Network.TotalTxSpeedBytesPerSec}")).ConfigureAwait(false);
+            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamUsagePercentage,{s.Ram.UsedPercentage:F1}")).ConfigureAwait(false);
+            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamUsedGb,{s.Ram.UsedBytes / (1024.0 * 1024.0 * 1024.0):F2}")).ConfigureAwait(false);
+            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamTotalGb,{s.Ram.TotalBytes / (1024.0 * 1024.0 * 1024.0):F2}")).ConfigureAwait(false);
+            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskUsagePercentage,{s.Disk.OverallUsedPercentage:F1}")).ConfigureAwait(false);
+            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskUsedGb,{s.Disk.UsedBytes / (1024.0 * 1024.0 * 1024.0):F2}")).ConfigureAwait(false);
+            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskTotalGb,{s.Disk.TotalBytes / (1024.0 * 1024.0 * 1024.0):F2}")).ConfigureAwait(false);
+            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,NetworkRxSpeedBytesPerSec,{s.Network.RxSpeedBytesPerSecond:F1}")).ConfigureAwait(false);
+            await writer.WriteLineAsync(string.Create(CultureInfo.InvariantCulture, $"Metrics,NetworkTxSpeedBytesPerSec,{s.Network.TxSpeedBytesPerSecond:F1}")).ConfigureAwait(false);
         }
 
         if (report.CpuHistory.Count > 0)
@@ -360,14 +360,14 @@ public class ExportService : IExportService
             var s = report.Snapshot;
             writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,CpuUsagePercentage,{s.Cpu.TotalUsagePercentage:F1}"));
             writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,CpuTemperatureCelsius,{(s.Cpu.TemperatureCelsius.HasValue ? s.Cpu.TemperatureCelsius.Value.ToString("F1", CultureInfo.InvariantCulture) : "N/A")}"));
-            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamUsagePercentage,{s.Ram.UsagePercentage:F1}"));
-            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamUsedGb,{s.Ram.UsedGigabytes:F2}"));
-            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamTotalGb,{s.Ram.TotalGigabytes:F2}"));
-            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskUsagePercentage,{s.Disk.TotalUsagePercentage:F1}"));
-            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskUsedGb,{s.Disk.UsedGigabytes:F2}"));
-            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskTotalGb,{s.Disk.TotalGigabytes:F2}"));
-            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,NetworkRxSpeedBytesPerSec,{s.Network.TotalRxSpeedBytesPerSec}"));
-            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,NetworkTxSpeedBytesPerSec,{s.Network.TotalTxSpeedBytesPerSec}"));
+            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamUsagePercentage,{s.Ram.UsedPercentage:F1}"));
+            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamUsedGb,{s.Ram.UsedBytes / (1024.0 * 1024.0 * 1024.0):F2}"));
+            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,RamTotalGb,{s.Ram.TotalBytes / (1024.0 * 1024.0 * 1024.0):F2}"));
+            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskUsagePercentage,{s.Disk.OverallUsedPercentage:F1}"));
+            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskUsedGb,{s.Disk.UsedBytes / (1024.0 * 1024.0 * 1024.0):F2}"));
+            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,DiskTotalGb,{s.Disk.TotalBytes / (1024.0 * 1024.0 * 1024.0):F2}"));
+            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,NetworkRxSpeedBytesPerSec,{s.Network.RxSpeedBytesPerSecond:F1}"));
+            writer.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Metrics,NetworkTxSpeedBytesPerSec,{s.Network.TxSpeedBytesPerSecond:F1}"));
         }
 
         if (report.CpuHistory.Count > 0)
