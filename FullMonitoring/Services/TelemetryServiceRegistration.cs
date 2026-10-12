@@ -108,6 +108,9 @@ public static class TelemetryServiceRegistration
         // Сервіс експорту зрізів телеметрії, процесів та журналу подій у формати JSON/CSV (Issue #12).
         services.AddSingleton<IExportService, ExportService>();
 
+        // Сервіс взаємодії з нативним діалогом вибору файлу Avalonia StorageProvider (Issue #12).
+        services.AddSingleton<IFileSaveDialogService, AvaloniaStorageFileSaveDialogService>();
+
         // ViewModels вкладок.
         services.AddTransient<OverviewViewModel>(provider => new OverviewViewModel(
             provider.GetRequiredService<ITelemetryProvider>()));
