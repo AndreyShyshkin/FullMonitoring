@@ -145,7 +145,7 @@
 
         <!-- Робоча область (Dashboard) -->
         <Grid Grid.Column="1"
-              RowDefinitions="Auto,Auto,*"
+              RowDefinitions="Auto,Auto,*,Auto"
               RowSpacing="12"
               Margin="14">
 
@@ -230,6 +230,47 @@
                             VerticalAlignment="Stretch"
                             HorizontalContentAlignment="Stretch"
                             VerticalContentAlignment="Stretch" />
+
+            <!-- Статус-бар платформи та рівня доступу до сенсорів (Issue #9) -->
+            <Border Grid.Row="3"
+                    Classes="dashboard-card"
+                    Padding="12,7">
+                <WrapPanel Orientation="Horizontal"
+                           VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,16,2"
+                                ToolTip.Tip="{Binding PlatformDetailsText}">
+                        <TextBlock Text="Платформа:" Opacity="0.7" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding PlatformDisplayName}" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding PlatformDetailsText}" Opacity="0.65" FontSize="11" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,16,2"
+                                ToolTip.Tip="Активний провайдер телеметрії, розв'язаний DI-контейнером">
+                        <TextBlock Text="Джерело:" Opacity="0.7" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding ProviderDisplayName}" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,16,2"
+                                ToolTip.Tip="Рівень доступу до апаратних сенсорів (температура, кулер)">
+                        <TextBlock Text="{Binding SensorAccessText}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Border Classes="os-restricted-badge"
+                            IsVisible="{Binding IsSafeMode}"
+                            ToolTip.Tip="Застосунок працює в режимі обмеженої функціональності без прав адміністратора"
+                            Margin="0,2,0,2"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SafeModeText}"
+                                   Foreground="{StaticResource SystemStateWarningBrush}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="{Binding SafeModeText}"
+                               IsVisible="{Binding !IsSafeMode}"
+                               FontSize="11"
+                               Opacity="0.7"
+                               VerticalAlignment="Center"
+                               Margin="0,2,0,2" />
+                </WrapPanel>
+            </Border>
 
         </Grid>
     </Grid>
