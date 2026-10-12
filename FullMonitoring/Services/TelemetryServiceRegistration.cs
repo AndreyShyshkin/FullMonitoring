@@ -105,6 +105,9 @@ public static class TelemetryServiceRegistration
             provider.GetRequiredService<ITelemetryProvider>(),
             TimeSpan.FromSeconds(1)));
 
+        // Сервіс експорту зрізів телеметрії, процесів та журналу подій у формати JSON/CSV (Issue #12).
+        services.AddSingleton<IExportService, ExportService>();
+
         // ViewModels вкладок.
         services.AddTransient<OverviewViewModel>(provider => new OverviewViewModel(
             provider.GetRequiredService<ITelemetryProvider>()));
