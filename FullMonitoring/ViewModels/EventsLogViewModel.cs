@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
+using System.IO;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FullMonitoring.Interfaces;
@@ -12,12 +14,14 @@ using FullMonitoring.Services;
 namespace FullMonitoring.ViewModels;
 
 /// <summary>
-/// Модель представлення для вкладки журналу подій та порогових сповіщень (Issue #8).
-/// Відповідає за відображення списку зафіксованих інцидентів, фільтрацію та очищення журналу.
+/// Модель представлення для вкладки журналу подій та порогових сповіщень (Issue #8, Issue #12).
+/// Відповідає за відображення списку зафіксованих інцидентів, фільтрацію, очищення та експорт журналу у JSON/CSV.
 /// </summary>
 public partial class EventsLogViewModel : ViewModelBase
 {
     private readonly IAlertService _alertService;
+    private readonly IExportService _exportService;
+    private readonly IFileSaveDialogService _fileSaveDialogService;
     private readonly SynchronizationContext? _syncContext;
     private readonly List<AlertIncident> _allIncidents = new();
 
@@ -52,11 +56,14 @@ public partial class EventsLogViewModel : ViewModelBase
     [ObservableProperty]
     private bool _hasIncidents;
 
+    [ObservableProperty]
+    private bool _isExporting;
+
     /// <summary>
     /// Ініціалізує новий екземпляр <see cref="EventsLogViewModel"/> зі стандартним сервісом сповіщень.
     /// </summary>
     public EventsLogViewModel()
-        : this(new AlertService())
+        : this(new AlertService(), new ExportService(), new AvaloniaStorageFileSaveDialogService())
     {
     }
 
@@ -65,8 +72,24 @@ public partial class EventsLogViewModel : ViewModelBase
     /// </summary>
     /// <param name="alertService">Сервіс порогових сповіщень та журналу інцидентів.</param>
     public EventsLogViewModel(IAlertService alertService)
+        : this(alertService, new ExportService(), new AvaloniaStorageFileSaveDialogService())
+    {
+    }
+
+    /// <summary>
+    /// Ініціалізує новий екземпляр <see cref="EventsLogViewModel"/> із заданим сервісом сповіщень та сервісами експорту.
+    /// </summary>
+    /// <param name="alertService">Сервіс порогових сповіщень та журналу інцидентів.</param>
+    /// <param name="exportService">Сервіс експорту журналу у JSON/CSV.</param>
+    /// <param name="fileSaveDialogService">Сервіс системного діалогу вибору файлу.</param>
+    public EventsLogViewModel(
+        IAlertService alertService,
+        IExportService exportService,
+        IFileSaveDialogService fileSaveDialogService)
     {
         _alertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
+        _exportService = exportService ?? throw new ArgumentNullException(nameof(exportService));
+        _fileSaveDialogService = fileSaveDialogService ?? throw new ArgumentNullException(nameof(fileSaveDialogService));
         _syncContext = SynchronizationContext.Current;
 
         _alertService.AlertTriggered += OnAlertTriggered;
@@ -190,6 +213,80 @@ public partial class EventsLogViewModel : ViewModelBase
         }
 
         HasIncidents = Incidents.Count > 0;
+    }
+
+    /// <summary>
+    /// Асинхронно експортує журнал подій у формат CSV (RFC 4180) через системний діалог збереження.
+    /// </summary>
+    [RelayCommand]
+    public async Task ExportToCsvAsync()
+    {
+        await ExportEventsInternalAsync(ExportFormatOption.Csv);
+    }
+
+    /// <summary>
+    /// Асинхронно експортує журнал подій у формат JSON через системний діалог збереження.
+    /// </summary>
+    [RelayCommand]
+    public async Task ExportToJsonAsync()
+    {
+        await ExportEventsInternalAsync(ExportFormatOption.Json);
+    }
+
+    /// <summary>
+    /// Експортує журнал подій за безпосереднім шляхом до файлу.
+    /// </summary>
+    public async Task ExportToFileAsync(string filePath, ExportFormatOption format)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        IsExporting = true;
+        try
+        {
+            var dataToExport = Incidents.Count > 0 ? (IEnumerable<AlertIncident>)Incidents : _allIncidents;
+            if (format == ExportFormatOption.Csv)
+            {
+                await _exportService.ExportToCsvAsync(filePath, dataToExport).ConfigureAwait(false);
+            }
+            else
+            {
+                await _exportService.ExportIncidentsToJsonAsync(filePath, dataToExport).ConfigureAwait(false);
+            }
+            StatusMessage = $"Журнал подій успішно збережено: {Path.GetFileName(filePath)}";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private async Task ExportEventsInternalAsync(ExportFormatOption format)
+    {
+        try
+        {
+            string ext = format == ExportFormatOption.Csv ? "csv" : "json";
+            string title = format == ExportFormatOption.Csv ? "Експорт журналу подій у CSV" : "Експорт журналу подій у JSON";
+            string fileName = $"events_log_{DateTime.Now:yyyyMMdd_HHmmss}.{ext}";
+
+            var options = new FileSaveDialogOptions
+            {
+                Title = title,
+                DefaultExtension = ext,
+                SuggestedFileName = fileName,
+                Format = format
+            };
+
+            string? chosenPath = await _fileSaveDialogService.ShowSaveFileDialogAsync(options);
+            if (string.IsNullOrWhiteSpace(chosenPath))
+            {
+                return;
+            }
+
+            await ExportToFileAsync(chosenPath, format);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Помилка експорту журналу подій: {ex.Message}";
+        }
     }
 
     private void UpdateStatistics()

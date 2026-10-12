@@ -122,7 +122,9 @@ public static class TelemetryServiceRegistration
             provider.GetRequiredService<IFileSaveDialogService>()));
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<EventsLogViewModel>(provider => new EventsLogViewModel(
-            provider.GetRequiredService<IAlertService>()));
+            provider.GetRequiredService<IAlertService>(),
+            provider.GetRequiredService<IExportService>(),
+            provider.GetRequiredService<IFileSaveDialogService>()));
 
         // Головна ViewModel із статус-баром платформи.
         services.AddSingleton<MainViewModel>(provider => new MainViewModel(
