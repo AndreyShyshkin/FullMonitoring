@@ -99,6 +99,12 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     private readonly Axis _cpuYAxis;
     private bool _disposed;
 
+    /// <summary>
+    /// Прапорець активного фонового збору (0 — вільний, 1 — збір триває).
+    /// Захищає від накладання тіків таймера (див. <see cref="OnPollingTimerTick"/>).
+    /// </summary>
+    private int _pollInFlight;
+
     [ObservableProperty]
     private SystemTelemetrySnapshot? _lastSnapshot;
 
@@ -741,20 +747,32 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         IsPollingActive = false;
     }
 
-    private void OnPollingTimerTick(object? sender, EventArgs e)
+    /// <summary>
+    /// Обробник тіка таймера опитування. Запускає АСИНХРОННИЙ збір метрик, щоб повільна
+    /// секція (диск/мережа чекають до таймауту) не блокувала UI-потік. Якщо попередній
+    /// збір ще триває, тік пропускається: інакше тіки накопичуються у черзі диспетчера
+    /// і виконуються підряд, а вибірки /proc/stat за мілісекунди дають нульову дельту
+    /// та вічні 0.0% CPU разом із завислим інтерфейсом.
+    /// </summary>
+    private async void OnPollingTimerTick(object? sender, EventArgs e)
     {
         if (_disposed)
         {
             return;
         }
 
-        if (Dispatcher.UIThread.CheckAccess())
+        if (Interlocked.CompareExchange(ref _pollInFlight, 1, 0) != 0)
         {
-            RefreshMetrics();
+            return;
         }
-        else
+
+        try
         {
-            Dispatcher.UIThread.Post(RefreshMetrics, DispatcherPriority.Background);
+            await RefreshMetricsAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _pollInFlight, 0);
         }
     }
 

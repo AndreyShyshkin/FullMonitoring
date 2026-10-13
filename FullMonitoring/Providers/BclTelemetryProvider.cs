@@ -27,6 +27,38 @@ public class BclTelemetryProvider : ITelemetryProvider
     private DateTimeOffset _lastNetworkCheckTime = DateTimeOffset.MinValue;
     private readonly Dictionary<string, (long bytesReceived, long bytesSent)> _previousNetworkStats = new();
 
+    /// <summary>
+    /// Граничний час збору однієї секції знімка (CPU / RAM / Disk / Network).
+    /// Окремі системні виклики (наприклад, <c>statvfs</c> для підвислих мережевих
+    /// чи shared-монтувань) можуть блокуватися невизначено довго, тому секція,
+    /// що не вклалася в ліміт, відкидається на користь появи вікна вчасно.
+    /// </summary>
+    internal static TimeSpan SnapshotSectionTimeout = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// Пауза повторних спроб для секції, що перевищила таймаут. Обмежує кількість
+    /// покинутих заблокованих потоків: скасувати завислий нативний виклик неможливо,
+    /// його можна лише покинути, тож часті повтори створювали б витік потоків.
+    /// </summary>
+    internal static TimeSpan SnapshotSectionCooldown = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Точкове перевизначення таймауту секцій для цього екземпляра (тестування).
+    /// <c>null</c> — використовувати статичний <see cref="SnapshotSectionTimeout"/>.
+    /// </summary>
+    internal TimeSpan? SectionTimeoutOverride { get; set; }
+
+    /// <summary>
+    /// Точкове перевизначення cooldown секцій для цього екземпляра (тестування).
+    /// <c>null</c> — використовувати статичний <see cref="SnapshotSectionCooldown"/>.
+    /// </summary>
+    internal TimeSpan? SectionCooldownOverride { get; set; }
+
+    private long _cpuSuspendedUntilTicks;
+    private long _ramSuspendedUntilTicks;
+    private long _diskSuspendedUntilTicks;
+    private long _networkSuspendedUntilTicks;
+
     /// <inheritdoc />
     public virtual string ProviderName => "Базовий BCL-провайдер телеметрії";
 
@@ -34,20 +66,78 @@ public class BclTelemetryProvider : ITelemetryProvider
     public virtual bool IsSupported => true;
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Кожна секція збирається з таймаутом (<see cref="SnapshotSectionTimeout"/>):
+    /// одна підвисла підсистема (диск, мережа) не блокує весь знімок і появу вікна.
+    /// Після таймауту секція тимчасово пропускається до спливу
+    /// <see cref="SnapshotSectionCooldown"/>.
+    /// </remarks>
     public virtual SystemTelemetrySnapshot GetSnapshot()
     {
         return new SystemTelemetrySnapshot
         {
             Timestamp = DateTimeOffset.UtcNow,
-            Cpu = GetCpuMetrics(),
-            Ram = GetRamMetrics(),
-            Disk = GetDiskMetrics(),
-            Network = GetNetworkMetrics(),
+            Cpu = CollectSectionWithTimeout(GetCpuMetrics, static () => new CpuMetrics(), ref _cpuSuspendedUntilTicks),
+            Ram = CollectSectionWithTimeout(GetRamMetrics, static () => new RamMetrics(), ref _ramSuspendedUntilTicks),
+            Disk = CollectSectionWithTimeout(GetDiskMetrics, static () => new DiskMetrics(), ref _diskSuspendedUntilTicks),
+            Network = CollectSectionWithTimeout(GetNetworkMetrics, static () => new NetworkMetrics(), ref _networkSuspendedUntilTicks),
             OsDescription = RuntimeInformation.OSDescription,
             Architecture = RuntimeInformation.ProcessArchitecture.ToString(),
             MachineName = Environment.MachineName,
             Uptime = TimeSpan.FromMilliseconds(Environment.TickCount64)
         };
+    }
+
+    /// <summary>
+    /// Виконує збір однієї секції знімка з обмеженням за часом.
+    /// У разі таймауту повертає резервне значення і призупиняє повтори секції
+    /// на час cooldown; виняток колектора повертає резерв без призупинення.
+    /// </summary>
+    /// <typeparam name="T">Тип метрик секції.</typeparam>
+    /// <param name="collector">Функція збору секції.</param>
+    /// <param name="fallback">Фабрика резервного значення.</param>
+    /// <param name="suspendedUntilTicks">Мітка закінчення призупинення секції.</param>
+    /// <returns>Зібрані або резервні метрики.</returns>
+    private T CollectSectionWithTimeout<T>(
+        Func<T> collector,
+        Func<T> fallback,
+        ref long suspendedUntilTicks)
+    {
+        var timeout = SectionTimeoutOverride ?? SnapshotSectionTimeout;
+        if (timeout <= TimeSpan.Zero)
+        {
+            timeout = TimeSpan.FromSeconds(3);
+        }
+
+        if (DateTimeOffset.UtcNow.Ticks < Interlocked.Read(ref suspendedUntilTicks))
+        {
+            return fallback();
+        }
+
+        try
+        {
+            var task = Task.Run(collector);
+            if (task.Wait(timeout))
+            {
+                return task.GetAwaiter().GetResult();
+            }
+        }
+        catch (Exception)
+        {
+            // Колектор кинув виняток швидко — повертаємо резерв без cooldown.
+            return fallback();
+        }
+
+        // Таймаут: завислий нативний виклик скасувати неможливо, лише покинути,
+        // тому фіксуємо cooldown, щоб не накопичувати заблоковані потоки.
+        var cooldown = SectionCooldownOverride ?? SnapshotSectionCooldown;
+        if (cooldown < TimeSpan.Zero)
+        {
+            cooldown = TimeSpan.Zero;
+        }
+
+        Interlocked.Exchange(ref suspendedUntilTicks, DateTimeOffset.UtcNow.Ticks + cooldown.Ticks);
+        return fallback();
     }
 
     /// <inheritdoc />

@@ -112,10 +112,19 @@ public static class TelemetryServiceRegistration
         services.AddSingleton<IFileSaveDialogService, AvaloniaStorageFileSaveDialogService>();
 
         // ViewModels вкладок.
+        // Overview створюється у відкладеному режимі (deferInitialCollection: true):
+        // синхронний збір метрик у конструкторі блокував би UI-потік до створення
+        // MainWindow (на повільних/підвислих файлових системах виклик DriveInfo або
+        // читання сенсорів може тривати довго), і вікно взагалі не з'являлося б.
+        // Перший знімок довантажується асинхронно вже після показу вікна (див. App),
+        // а доти інтерфейс показує Skeleton (IsInitialLoading). Таймер опитування
+        // при цьому вже активний і підхопить оновлення за розкладом.
         services.AddTransient<OverviewViewModel>(provider => new OverviewViewModel(
             provider.GetRequiredService<ITelemetryProvider>(),
             provider.GetRequiredService<IExportService>(),
-            provider.GetRequiredService<IFileSaveDialogService>()));
+            provider.GetRequiredService<IFileSaveDialogService>(),
+            autoStartPolling: true,
+            deferInitialCollection: true));
         services.AddTransient<ProcessesViewModel>(provider => new ProcessesViewModel(
             provider.GetRequiredService<IProcessManagerService>(),
             provider.GetRequiredService<IExportService>(),
