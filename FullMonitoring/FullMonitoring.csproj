@@ -6,7 +6,10 @@
              Глобальные свойства (например, OutputType=Library из FullMonitoring.Tests)
              всё равно перекрывают это значение, сборка тестов не меняется. -->
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <!-- Цільовий фреймворк відповідає README (Runtime .NET 10.0): застосунок
+             запускається на середовищі виконання, яке постачається разом із
+             вимушеним global.json SDK 10, без потреби доставляти .NET 9. -->
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
     </PropertyGroup>
