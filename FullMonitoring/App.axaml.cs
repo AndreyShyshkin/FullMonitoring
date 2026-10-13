@@ -45,7 +45,13 @@ public partial class App : Application
                 DataContext = mainViewModel,
             };
 
-            // 3. Підписка на вивільнення ресурсів при закритті (Issue #10).
+            // 3. Перший збір метрик — асинхронно, вже після створення вікна.
+            // RefreshMetricsAsync виконує важкі виклики провайдера у пулі потоків,
+            // тому навіть повільні сенсори/диски не блокують появу вікна; метод
+            // перехоплює всі винятки провайдера у InfoBar, тож виклик без очікування безпечний.
+            _ = mainViewModel.Overview.RefreshMetricsAsync();
+
+            // 4. Підписка на вивільнення ресурсів при закритті (Issue #10).
             desktop.ShutdownRequested += OnShutdownRequested;
         }
 

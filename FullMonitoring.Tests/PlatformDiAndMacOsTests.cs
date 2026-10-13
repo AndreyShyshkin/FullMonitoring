@@ -445,6 +445,29 @@ public class PlatformDiAndMacOsTests
         Assert.Same(platformInfo, mainViewModel.PlatformInfo);
     }
 
+    [Fact]
+    public async System.Threading.Tasks.Task AddFullMonitoringPlatformServices_OverviewStartsDeferredAndLoadsAsync()
+    {
+        // Перевірка стартової стратегії застосунку: Overview з DI не виконує
+        // синхронного збору метрик у конструкторі (інакше повільні диски/сенсори
+        // блокували б UI-потік і вікно не з'являлося б), а показує Skeleton
+        // і довантажує перший знімок асинхронно.
+        var services = new ServiceCollection();
+        services.AddFullMonitoringPlatformServices();
+        using var provider = services.BuildServiceProvider();
+
+        var mainViewModel = provider.GetRequiredService<MainViewModel>();
+
+        Assert.True(mainViewModel.Overview.IsInitialLoading);
+        Assert.False(mainViewModel.Overview.IsFirstSnapshotLoaded);
+
+        await mainViewModel.Overview.RefreshMetricsAsync();
+
+        Assert.True(mainViewModel.Overview.IsFirstSnapshotLoaded);
+        Assert.False(mainViewModel.Overview.IsInitialLoading);
+        Assert.False(string.IsNullOrWhiteSpace(mainViewModel.Overview.OsDescription));
+    }
+
     // --- MainViewModel: статус-бар платформи ---
 
     [Fact]
