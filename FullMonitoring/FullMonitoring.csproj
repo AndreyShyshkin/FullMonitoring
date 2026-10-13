@@ -15,8 +15,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Models\" />
-        <AvaloniaResource Include="Assets\**" />
+        <!-- Прямі слеші у глобах: зворотні слеші некоректно розкриваються
+             файловим глобінгом MSBuild на Linux (case-sensitive FS). -->
+        <Folder Include="Models/" />
+        <AvaloniaResource Include="Assets/**" />
     </ItemGroup>
 
     <ItemGroup>
