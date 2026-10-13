@@ -83,11 +83,54 @@
 
 ## Вимоги для локальної розробки
 
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (мінімум `10.0.100`, зафіксовано у `global.json`)
 - IDE на вибір:
     - JetBrains Rider (із встановленим плагіном *Avalonia for Rider*)
     - Visual Studio 2022 (компонент *.NET Desktop Development* + розширення *Avalonia*)
     - VS Code (із розширеннями *C# Dev Kit* та *Avalonia*)
+
+> **Чому саме .NET 10 SDK?** Генератори XAML-коду Avalonia 12 (`Avalonia.Generators`) зібрані під Roslyn 4.14+.
+> Збірка старішим SDK (наприклад, 9.0.1xx з Roslyn 4.12) мовчки не генерує метод `InitializeComponent`
+> (попередження `CS9057`), і компіляція падає з помилками `CS0103` у всіх файлах `*.axaml.cs`.
+> Файл `global.json` у корені репозиторію примусово вимагає SDK 10, щоб замість
+> незрозумілих `CS0103` одразу було видно чесну вимогу до toolchain.
+
+### Встановлення .NET 10 SDK на Ubuntu ARM64
+
+```bash
+# 1. Додати офіційний фід пакетів Microsoft (Ubuntu 24.04+, архітектура arm64)
+wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+
+# 2. Встановити SDK 10
+sudo apt-get update
+sudo apt-get install -y dotnet-sdk-10.0
+
+# 3. Перевірити версію (має бути 10.0.100 або новіше)
+dotnet --version
+```
+
+Альтернатива без `apt` — скрипт встановлення у домашній каталог:
+
+```bash
+curl -sSL https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh
+chmod +x dotnet-install.sh
+./dotnet-install.sh --channel 10.0
+export DOTNET_ROOT="$HOME/.dotnet"
+export PATH="$DOTNET_ROOT:$PATH"
+dotnet --version
+```
+
+### Чиста збірка після зміни SDK або гілки
+
+```bash
+# Видалити артефакти попередніх збірок (особливо важливо на спільних
+# каталогах типу Parallels Shared Folders, де bin/obj спільні між ОС)
+rm -rf FullMonitoring/bin FullMonitoring/obj FullMonitoring.Tests/bin FullMonitoring.Tests/obj
+dotnet restore
+dotnet build
+```
 
 ---
 
