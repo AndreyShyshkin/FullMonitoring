@@ -42,6 +42,18 @@ public class BclTelemetryProvider : ITelemetryProvider
     /// </summary>
     internal static TimeSpan SnapshotSectionCooldown = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// Точкове перевизначення таймауту секцій для цього екземпляра (тестування).
+    /// <c>null</c> — використовувати статичний <see cref="SnapshotSectionTimeout"/>.
+    /// </summary>
+    internal TimeSpan? SectionTimeoutOverride { get; set; }
+
+    /// <summary>
+    /// Точкове перевизначення cooldown секцій для цього екземпляра (тестування).
+    /// <c>null</c> — використовувати статичний <see cref="SnapshotSectionCooldown"/>.
+    /// </summary>
+    internal TimeSpan? SectionCooldownOverride { get; set; }
+
     private long _cpuSuspendedUntilTicks;
     private long _ramSuspendedUntilTicks;
     private long _diskSuspendedUntilTicks;
@@ -86,12 +98,12 @@ public class BclTelemetryProvider : ITelemetryProvider
     /// <param name="fallback">Фабрика резервного значення.</param>
     /// <param name="suspendedUntilTicks">Мітка закінчення призупинення секції.</param>
     /// <returns>Зібрані або резервні метрики.</returns>
-    private static T CollectSectionWithTimeout<T>(
+    private T CollectSectionWithTimeout<T>(
         Func<T> collector,
         Func<T> fallback,
         ref long suspendedUntilTicks)
     {
-        var timeout = SnapshotSectionTimeout;
+        var timeout = SectionTimeoutOverride ?? SnapshotSectionTimeout;
         if (timeout <= TimeSpan.Zero)
         {
             timeout = TimeSpan.FromSeconds(3);
@@ -118,7 +130,7 @@ public class BclTelemetryProvider : ITelemetryProvider
 
         // Таймаут: завислий нативний виклик скасувати неможливо, лише покинути,
         // тому фіксуємо cooldown, щоб не накопичувати заблоковані потоки.
-        var cooldown = SnapshotSectionCooldown;
+        var cooldown = SectionCooldownOverride ?? SnapshotSectionCooldown;
         if (cooldown < TimeSpan.Zero)
         {
             cooldown = TimeSpan.Zero;
