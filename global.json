@@ -1,0 +1,11 @@
+{
+  // Мінімальна версія SDK зафіксована свідомо: генератори XAML коду Avalonia 12
+  // (Avalonia.Generators) зібрані під Roslyn 4.14+, тому збірка зі старішим SDK
+  // (наприклад, 9.0.1xx з Roslyn 4.12) мовчки не генерує InitializeComponent
+  // і завершується помилками CS0103 у всіх *.axaml.cs. rollForward дозволяє
+  // використовувати будь-який новіший SDK гілки 10.0.x.
+  "sdk": {
+    "version": "10.0.100",
+    "rollForward": "latestFeature"
+  }
+}
