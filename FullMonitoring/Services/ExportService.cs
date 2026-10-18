@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -20,6 +21,7 @@ namespace FullMonitoring.Services;
 public class ExportService : IExportService
 {
     private static readonly UTF8Encoding Utf8WithBom = new(encoderShouldEmitUTF8Identifier: true);
+    private static readonly SearchValues<char> CsvSpecialChars = SearchValues.Create(",\"\r\n;");
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -42,17 +44,6 @@ public class ExportService : IExportService
     }
 
     /// <summary>
-    /// Синхронно серіалізує та зберігає комплексний звіт телеметрії у файл JSON.
-    /// </summary>
-    public void ExportToJson(string filePath, TelemetryReport report)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
-        ArgumentNullException.ThrowIfNull(report);
-
-        ExportToJsonInternal(filePath, report);
-    }
-
-    /// <summary>
     /// Асинхронно серіалізує та зберігає довільний об'єкт даних у форматі JSON.
     /// </summary>
     public Task ExportToJsonAsync<T>(string filePath, T data, CancellationToken cancellationToken = default)
@@ -61,6 +52,17 @@ public class ExportService : IExportService
         ArgumentNullException.ThrowIfNull(data);
 
         return ExportToJsonInternalAsync(filePath, data, cancellationToken);
+    }
+
+    /// <summary>
+    /// Синхронно серіалізує та зберігає комплексний звіт телеметрії у файл JSON.
+    /// </summary>
+    public void ExportToJson(string filePath, TelemetryReport report)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentNullException.ThrowIfNull(report);
+
+        ExportToJsonInternal(filePath, report);
     }
 
     /// <summary>
@@ -124,32 +126,6 @@ public class ExportService : IExportService
     }
 
     /// <summary>
-    /// Синхронно експортує перелік активних процесів у табличний формат CSV (RFC 4180).
-    /// </summary>
-    public void ExportToCsv(string filePath, IEnumerable<ProcessItem> processes)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
-        ArgumentNullException.ThrowIfNull(processes);
-
-        EnsureDirectoryExists(filePath);
-
-        using var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
-        using var writer = new StreamWriter(stream, Utf8WithBom);
-
-        writer.WriteLine("PID,Name,RAM (Bytes),RAM (MB),Threads,Status");
-
-        foreach (var process in processes)
-        {
-            string line = string.Create(
-                CultureInfo.InvariantCulture,
-                $"{process.Pid},{EscapeCsv(process.Name)},{process.RamUsageBytes},{process.RamUsageMb:F2},{process.ThreadCount},{EscapeCsv(process.Status)}");
-            writer.WriteLine(line);
-        }
-
-        writer.Flush();
-    }
-
-    /// <summary>
     /// Асинхронно експортує журнал зафіксованих інцидентів у формат CSV.
     /// </summary>
     public async Task ExportToCsvAsync(string filePath, IEnumerable<AlertIncident> incidents, CancellationToken cancellationToken = default)
@@ -174,6 +150,49 @@ public class ExportService : IExportService
         }
 
         await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Асинхронно експортує зведений звіт телеметрії у формат CSV.
+    /// </summary>
+    public async Task ExportToCsvAsync(string filePath, TelemetryReport report, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentNullException.ThrowIfNull(report);
+
+        EnsureDirectoryExists(filePath);
+
+        await using var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
+        await using var writer = new StreamWriter(stream, Utf8WithBom);
+
+        await WriteReportCsvContentAsync(writer, report, cancellationToken).ConfigureAwait(false);
+        await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Синхронно експортує перелік активних процесів у табличний формат CSV (RFC 4180).
+    /// </summary>
+    public void ExportToCsv(string filePath, IEnumerable<ProcessItem> processes)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentNullException.ThrowIfNull(processes);
+
+        EnsureDirectoryExists(filePath);
+
+        using var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
+        using var writer = new StreamWriter(stream, Utf8WithBom);
+
+        writer.WriteLine("PID,Name,RAM (Bytes),RAM (MB),Threads,Status");
+
+        foreach (var process in processes)
+        {
+            string line = string.Create(
+                CultureInfo.InvariantCulture,
+                $"{process.Pid},{EscapeCsv(process.Name)},{process.RamUsageBytes},{process.RamUsageMb:F2},{process.ThreadCount},{EscapeCsv(process.Status)}");
+            writer.WriteLine(line);
+        }
+
+        writer.Flush();
     }
 
     /// <summary>
@@ -203,23 +222,6 @@ public class ExportService : IExportService
     }
 
     /// <summary>
-    /// Асинхронно експортує зведений звіт телеметрії у формат CSV.
-    /// </summary>
-    public async Task ExportToCsvAsync(string filePath, TelemetryReport report, CancellationToken cancellationToken = default)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
-        ArgumentNullException.ThrowIfNull(report);
-
-        EnsureDirectoryExists(filePath);
-
-        await using var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
-        await using var writer = new StreamWriter(stream, Utf8WithBom);
-
-        await WriteReportCsvContentAsync(writer, report, cancellationToken).ConfigureAwait(false);
-        await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>
     /// Синхронно експортує зведений звіт телеметрії у формат CSV.
     /// </summary>
     public void ExportToCsv(string filePath, TelemetryReport report)
@@ -246,7 +248,7 @@ public class ExportService : IExportService
             return string.Empty;
         }
 
-        bool containsSpecialChars = value.IndexOfAny(new[] { ',', '"', '\r', '\n', ';' }) >= 0;
+        bool containsSpecialChars = value.AsSpan().IndexOfAny(CsvSpecialChars) >= 0;
         if (!containsSpecialChars)
         {
             return value;

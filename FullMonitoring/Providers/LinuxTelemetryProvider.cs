@@ -28,7 +28,7 @@ public sealed class LinuxTelemetryProvider : BclTelemetryProvider
 
     private LinuxTelemetryParser.CpuTimeSample _lastCpuAggregate;
     private LinuxTelemetryParser.CpuTimeSample[] _lastCpuCores = Array.Empty<LinuxTelemetryParser.CpuTimeSample>();
-    private IReadOnlyList<double> _lastCoreUsages = Array.Empty<double>();
+    private double[] _lastCoreUsages = Array.Empty<double>();
     private bool _hasCpuBaseline;
     private double _lastCpuUsage;
 
@@ -79,7 +79,7 @@ public sealed class LinuxTelemetryProvider : BclTelemetryProvider
                 var coreUsages = new double[snapshot.Cores.Length];
                 for (int i = 0; i < snapshot.Cores.Length; i++)
                 {
-                    double fallback = i < _lastCoreUsages.Count ? _lastCoreUsages[i] : aggregateUsage;
+                    double fallback = i < _lastCoreUsages.Length ? _lastCoreUsages[i] : aggregateUsage;
                     coreUsages[i] = _hasCpuBaseline && i < _lastCpuCores.Length
                         ? CalculateUsage(_lastCpuCores[i], snapshot.Cores[i], fallback)
                         : fallback;

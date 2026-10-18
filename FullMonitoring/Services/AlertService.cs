@@ -307,7 +307,7 @@ public class AlertService : IAlertService
         if (!actualValue.HasValue)
         {
             // Якщо сенсор не повернув значення (наприклад, температура недоступна), стан скидається.
-            ResetTracker(tracker, now);
+            ResetTracker(tracker);
             return;
         }
 
@@ -394,9 +394,9 @@ public class AlertService : IAlertService
         }
     }
 
-    private void ResetTracker(MetricTracker tracker, DateTimeOffset now)
+    private static void ResetTracker(MetricTracker tracker)
     {
-        lock (_syncLock)
+        lock (tracker)
         {
             tracker.OverloadStartTime = null;
             tracker.AlertFired = false;
@@ -410,14 +410,13 @@ public class AlertService : IAlertService
     {
         lock (_syncLock)
         {
-            if (_isDisposed)
-                throw new ObjectDisposedException(nameof(AlertService));
+            ObjectDisposedException.ThrowIf(_isDisposed, this);
 
             if (IsRunning || _telemetryProvider == null)
                 return;
 
             _cts = new CancellationTokenSource();
-            _backgroundTask = Task.Run(() => PollingLoopAsync(_cts.Token));
+            _backgroundTask = Task.Run(() => PollingLoopAsync(_cts.Token), _cts.Token);
         }
     }
 
@@ -442,10 +441,16 @@ public class AlertService : IAlertService
             try
             {
                 ctsToCancel.Cancel();
-                taskToWait?.Wait(TimeSpan.FromSeconds(2));
+                taskToWait?.Wait(TimeSpan.FromSeconds(2), CancellationToken.None);
             }
-            catch (AggregateException) { }
-            catch (OperationCanceledException) { }
+            catch (AggregateException)
+            {
+                // Очікуване завершення фонового потоку
+            }
+            catch (OperationCanceledException)
+            {
+                // Очікуване скасування фонового потоку
+            }
             finally
             {
                 ctsToCancel.Dispose();

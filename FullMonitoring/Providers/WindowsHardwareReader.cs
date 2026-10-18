@@ -78,22 +78,22 @@ public class WindowsHardwareReader : IDisposable
         return cpu?.Sensors.FirstOrDefault(s => s.SensorType == SensorType.Temperature)?.Value;
     }
 
-   public float? GetGpuTemperature()
-{
-    try
+    public float? GetGpuTemperature()
     {
-        var gpu = _computer.Hardware.FirstOrDefault(h => 
-            h.HardwareType == HardwareType.GpuNvidia || 
-            h.HardwareType == HardwareType.GpuAmd || 
-            h.HardwareType == HardwareType.GpuIntel);
+        try
+        {
+            var gpu = _computer.Hardware.FirstOrDefault(h =>
+                h.HardwareType == HardwareType.GpuNvidia ||
+                h.HardwareType == HardwareType.GpuAmd ||
+                h.HardwareType == HardwareType.GpuIntel);
 
-        return gpu?.Sensors.FirstOrDefault(s => s.SensorType == SensorType.Temperature)?.Value;
+            return gpu?.Sensors.FirstOrDefault(s => s.SensorType == SensorType.Temperature)?.Value;
+        }
+        catch
+        {
+            return null; // Захист від відсутності драйверів GPU
+        }
     }
-    catch
-    {
-        return null; // Захист від відсутності драйверів GPU
-    }
-}
 
     public float? GetFanSpeed()
     {

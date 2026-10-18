@@ -33,14 +33,14 @@ public class BclTelemetryProvider : ITelemetryProvider
     /// чи shared-монтувань) можуть блокуватися невизначено довго, тому секція,
     /// що не вклалася в ліміт, відкидається на користь появи вікна вчасно.
     /// </summary>
-    internal static TimeSpan SnapshotSectionTimeout = TimeSpan.FromSeconds(3);
+    internal static readonly TimeSpan SnapshotSectionTimeout = TimeSpan.FromSeconds(3);
 
     /// <summary>
     /// Пауза повторних спроб для секції, що перевищила таймаут. Обмежує кількість
     /// покинутих заблокованих потоків: скасувати завислий нативний виклик неможливо,
     /// його можна лише покинути, тож часті повтори створювали б витік потоків.
     /// </summary>
-    internal static TimeSpan SnapshotSectionCooldown = TimeSpan.FromSeconds(30);
+    internal static readonly TimeSpan SnapshotSectionCooldown = TimeSpan.FromSeconds(30);
 
     /// <summary>
     /// Точкове перевизначення таймауту секцій для цього екземпляра (тестування).
@@ -403,8 +403,18 @@ public class BclTelemetryProvider : ITelemetryProvider
     }
 
     /// <inheritdoc />
-    public virtual void Dispose()
+    public void Dispose()
     {
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Звільняє керовані ресурси.
+    /// </summary>
+    /// <param name="disposing">true якщо виклик здійснено явно через Dispose.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        // Базова реалізація для похідних класів
     }
 }

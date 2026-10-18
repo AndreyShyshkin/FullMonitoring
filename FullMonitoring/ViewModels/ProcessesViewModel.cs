@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -63,6 +64,8 @@ public partial class ProcessesViewModel : ViewModelBase
     /// <summary>
     /// Стандартний текст візуальної підказки для дій, доступ до яких обмежено правами ОС.
     /// </summary>
+    [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Exposed as instance property for Avalonia XAML DataBinding")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Exposed as instance property for Avalonia XAML DataBinding")]
     public string OsSecurityRestrictionText => SystemStatePalette.OsSecurityPolicyRestrictedText;
 
     /// <summary>

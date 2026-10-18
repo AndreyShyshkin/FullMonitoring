@@ -29,12 +29,10 @@ public class AvaloniaStorageFileSaveDialogService : IFileSaveDialogService
     /// </summary>
     public static TopLevel? GetDefaultTopLevel()
     {
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
+            && desktop.MainWindow is not null)
         {
-            if (desktop.MainWindow is not null)
-            {
-                return TopLevel.GetTopLevel(desktop.MainWindow);
-            }
+            return TopLevel.GetTopLevel(desktop.MainWindow);
         }
 
         return null;

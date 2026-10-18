@@ -198,7 +198,7 @@ internal static class MacOsMachReader
             {
                 try
                 {
-                    vm_deallocate(taskPort, unchecked((ulong)info.ToInt64()), (ulong)infoCount * sizeof(int));
+                    _ = vm_deallocate(taskPort, unchecked((ulong)info.ToInt64()), (ulong)infoCount * sizeof(int));
                 }
                 catch (Exception)
                 {
@@ -263,7 +263,13 @@ internal static class MacOsMachReader
 
         try
         {
-            return host_page_size(HostPort.Value, out ulong size) == 0 && size > 0 && (pageSize = (long)size) > 0;
+            if (host_page_size(HostPort.Value, out ulong size) == 0 && size > 0)
+            {
+                pageSize = (long)size;
+                return true;
+            }
+
+            return false;
         }
         catch (Exception)
         {
@@ -355,6 +361,6 @@ internal static class MacOsMachReader
     [DllImport("libc", EntryPoint = "vm_deallocate")]
     private static extern int vm_deallocate(uint task, ulong address, ulong size);
 
-    [DllImport("libc", EntryPoint = "dlsym")]
+    [DllImport("libc", EntryPoint = "dlsym", CharSet = CharSet.Ansi, ExactSpelling = true, BestFitMapping = false, ThrowOnUnmappableChar = true)]
     private static extern IntPtr dlsym(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string symbolName);
 }

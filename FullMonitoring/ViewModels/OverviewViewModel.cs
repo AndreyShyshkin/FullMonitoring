@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -169,6 +170,8 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Стандартний текст візуальної підказки для метрик, доступ до яких обмежено правами ОС.
     /// </summary>
+    [SuppressMessage("Major Code Smell", "S2325:Methods and properties that don't access instance data should be static", Justification = "Exposed as instance property for Avalonia XAML DataBinding")]
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Exposed as instance property for Avalonia XAML DataBinding")]
     public string OsSecurityRestrictionText => SystemStatePalette.OsSecurityPolicyRestrictedText;
 
     // --- Таймер опитування (DispatcherTimer) ---
@@ -736,15 +739,29 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
     /// </summary>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Звільняє керовані ресурси.
+    /// </summary>
+    /// <param name="disposing">true якщо виклик здійснено явно через Dispose.</param>
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed)
         {
             return;
         }
 
+        if (disposing)
+        {
+            _pollingTimer.Stop();
+            _pollingTimer.Tick -= OnPollingTimerTick;
+            IsPollingActive = false;
+        }
+
         _disposed = true;
-        _pollingTimer.Stop();
-        _pollingTimer.Tick -= OnPollingTimerTick;
-        IsPollingActive = false;
     }
 
     /// <summary>
@@ -884,7 +901,7 @@ public partial class OverviewViewModel : ViewModelBase, IDisposable
         IsExporting = true;
         try
         {
-            var snapshot = LastSnapshot ?? _telemetryProvider.GetSnapshot();
+            var snapshot = LastSnapshot ?? await _telemetryProvider.GetSnapshotAsync().ConfigureAwait(false);
             var cpuHistory = CpuUsageHistory.ToArray();
             var report = TelemetryReport.Create(snapshot, cpuHistory);
 

@@ -20,14 +20,14 @@ public interface IExportService
     Task ExportToJsonAsync(string filePath, TelemetryReport report, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Синхронно серіалізує та зберігає комплексний звіт телеметрії у файл JSON.
-    /// </summary>
-    void ExportToJson(string filePath, TelemetryReport report);
-
-    /// <summary>
     /// Асинхронно серіалізує та зберігає довільний об'єкт даних у форматі JSON.
     /// </summary>
     Task ExportToJsonAsync<T>(string filePath, T data, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Синхронно серіалізує та зберігає комплексний звіт телеметрії у файл JSON.
+    /// </summary>
+    void ExportToJson(string filePath, TelemetryReport report);
 
     /// <summary>
     /// Синхронно серіалізує та зберігає довільний об'єкт даних у форматі JSON.
@@ -40,24 +40,24 @@ public interface IExportService
     Task ExportToCsvAsync(string filePath, IEnumerable<ProcessItem> processes, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Синхронно експортує перелік активних процесів у табличний формат CSV (RFC 4180).
-    /// </summary>
-    void ExportToCsv(string filePath, IEnumerable<ProcessItem> processes);
-
-    /// <summary>
     /// Асинхронно експортує журнал зафіксованих інцидентів та сповіщень у формат CSV.
     /// </summary>
     Task ExportToCsvAsync(string filePath, IEnumerable<AlertIncident> incidents, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Синхронно експортує журнал зафіксованих інцидентів та сповіщень у формат CSV.
-    /// </summary>
-    void ExportToCsv(string filePath, IEnumerable<AlertIncident> incidents);
-
-    /// <summary>
     /// Асинхронно експортує зведений звіт телеметрії та історію показників у формат CSV.
     /// </summary>
     Task ExportToCsvAsync(string filePath, TelemetryReport report, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Синхронно експортує перелік активних процесів у табличний формат CSV (RFC 4180).
+    /// </summary>
+    void ExportToCsv(string filePath, IEnumerable<ProcessItem> processes);
+
+    /// <summary>
+    /// Синхронно експортує журнал зафіксованих інцидентів та сповіщень у формат CSV.
+    /// </summary>
+    void ExportToCsv(string filePath, IEnumerable<AlertIncident> incidents);
 
     /// <summary>
     /// Синхронно експортує зведений звіт телеметрії та історію показників у формат CSV.
