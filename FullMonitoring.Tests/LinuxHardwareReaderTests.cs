@@ -8,7 +8,7 @@ namespace FullMonitoring.Tests;
 /// <summary>
 /// Тести читача апаратних датчиків hwmon на тимчасовій файловій структурі.
 /// </summary>
-public class LinuxHardwareReaderTests : IDisposable
+public sealed class LinuxHardwareReaderTests : IDisposable
 {
     private readonly string _root;
 

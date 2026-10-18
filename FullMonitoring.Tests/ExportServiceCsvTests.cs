@@ -13,7 +13,7 @@ namespace FullMonitoring.Tests;
 /// <summary>
 /// Модульні тести для перевірки CSV-серіалізації (RFC 4180), UTF-8 BOM та екранування у ExportService (Issue #12 DoD).
 /// </summary>
-public class ExportServiceCsvTests : IDisposable
+public sealed class ExportServiceCsvTests : IDisposable
 {
     private readonly string _tempDirectory;
     private readonly ExportService _exportService;

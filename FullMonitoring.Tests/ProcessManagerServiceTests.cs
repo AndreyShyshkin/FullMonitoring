@@ -122,10 +122,11 @@ public class ProcessManagerServiceTests
     public void KillProcess_ValidActiveProcess_TerminatesSuccessfully()
     {
         // Запускаємо тестовий дочірній процес, який чекає
+        bool isWindows = OperatingSystem.IsWindows();
         using var testProcess = Process.Start(new ProcessStartInfo
         {
-            FileName = "cmd.exe",
-            Arguments = "/c ping 127.0.0.1 -n 15 > nul",
+            FileName = isWindows ? "cmd.exe" : "sleep",
+            Arguments = isWindows ? "/c ping 127.0.0.1 -n 15 > nul" : "15",
             CreateNoWindow = true,
             UseShellExecute = false
         });
@@ -150,8 +151,9 @@ public class ProcessManagerServiceTests
                     testProcess.Kill();
                 }
             }
-            catch
+            catch (Exception)
             {
+                // Ігноруємо помилки повторного завершення процесу у teardown
             }
         }
     }

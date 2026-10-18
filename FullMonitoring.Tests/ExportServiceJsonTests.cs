@@ -13,7 +13,7 @@ namespace FullMonitoring.Tests;
 /// <summary>
 /// Модульні тести для перевірки JSON-серіалізації та валідності збережених файлів у ExportService (Issue #12 DoD).
 /// </summary>
-public class ExportServiceJsonTests : IDisposable
+public sealed class ExportServiceJsonTests : IDisposable
 {
     private readonly string _tempDirectory;
     private readonly ExportService _exportService;
@@ -193,7 +193,7 @@ public class ExportServiceJsonTests : IDisposable
         // Arrange
         string filePath = Path.Combine(_tempDirectory, "cancelled.json");
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
