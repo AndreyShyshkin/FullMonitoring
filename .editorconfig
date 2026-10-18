@@ -1,0 +1,38 @@
+# Top-most EditorConfig file
+root = true
+
+# All files
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
+
+# C# files
+[*.cs]
+# Standard C# formatting
+csharp_indent_braces = false
+csharp_indent_switch_labels = true
+csharp_new_line_before_open_brace = all
+csharp_space_after_cast = false
+csharp_space_around_binary_operators = before_and_after
+csharp_using_directive_placement = outside_namespace:error
+
+# Code Analysis Rules
+# CA1716: Identifiers should not match keywords (Stop is idiomatic in C# service lifecycles)
+dotnet_diagnostic.CA1716.severity = none
+
+# Unit Test files conventions
+[**/*Tests.cs]
+# CA1707: Identifiers should not contain underscores (Unit test methods conventionally use Method_Scenario_ExpectedResult)
+dotnet_diagnostic.CA1707.severity = none
+# CA1806: Test assertions may record exceptions without reading return values
+dotnet_diagnostic.CA1806.severity = none
+# CA2007: Do not directly await a Task in test fixtures
+dotnet_diagnostic.CA2007.severity = none
+# CA1305: Culture formatting in test assertions
+dotnet_diagnostic.CA1305.severity = none
+# CA1861: Constant arrays in test data
+dotnet_diagnostic.CA1861.severity = none

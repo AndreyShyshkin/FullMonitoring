@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <!-- Увімкнення та налаштування сучасного статичного аналізу коду Roslyn/.NET -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SonarAnalyzer для C# (офіційний аналізатор SonarQube/SonarCloud правил для .NET) -->
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.35.0.4138">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

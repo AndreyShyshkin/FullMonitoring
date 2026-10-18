@@ -484,3 +484,6 @@ $RECYCLE.BIN/
 # JetBrains Rider
 .idea/
 *.sln.DotSettings.user
+
+# Local install scripts
+dotnet-install.sh

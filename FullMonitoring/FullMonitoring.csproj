@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <!-- Без условия: SDK.props уже выставил OutputType=Library до чтения тела проекта,
              поэтому Condition="'$(OutputType)' == ''" никогда не срабатывал и проект
