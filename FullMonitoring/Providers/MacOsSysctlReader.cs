@@ -21,9 +21,9 @@ internal static class MacOsSysctlReader
     public const string KeyOsRelease = "kern.osrelease";
     public const string KeyOsType = "kern.ostype";
 
-    [DllImport("libc", SetLastError = true, CharSet = CharSet.Ansi)]
+    [DllImport("libc", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true, BestFitMapping = false, ThrowOnUnmappableChar = true)]
     private static extern int sysctlbyname(
-        string name,
+        [MarshalAs(UnmanagedType.LPStr)] string name,
         IntPtr oldp,
         ref UIntPtr oldlenp,
         IntPtr newp,

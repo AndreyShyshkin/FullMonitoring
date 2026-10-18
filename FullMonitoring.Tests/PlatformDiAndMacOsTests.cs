@@ -24,11 +24,11 @@ public class PlatformDiAndMacOsTests
         // Виклик не повинен кидати виняток на жодній ОС (Windows / Linux / macOS).
         var ex = Record.Exception(() =>
         {
-            bool u64 = MacOsSysctlReader.TryGetUInt64("hw.memsize", out ulong _);
-            bool i32 = MacOsSysctlReader.TryGetInt32("hw.logicalcpu", out int _);
-            bool str = MacOsSysctlReader.TryGetString("machdep.cpu.brand_string", out string _);
-            bool mem = MacOsSysctlReader.TryGetTotalMemoryBytes(out long _);
-            bool cpu = MacOsSysctlReader.TryGetLogicalCpuCount(out int _);
+            _ = MacOsSysctlReader.TryGetUInt64("hw.memsize", out _);
+            _ = MacOsSysctlReader.TryGetInt32("hw.logicalcpu", out _);
+            _ = MacOsSysctlReader.TryGetString("machdep.cpu.brand_string", out _);
+            _ = MacOsSysctlReader.TryGetTotalMemoryBytes(out _);
+            _ = MacOsSysctlReader.TryGetLogicalCpuCount(out _);
         });
 
         Assert.Null(ex);
@@ -164,10 +164,10 @@ public class PlatformDiAndMacOsTests
     {
         var ex = Record.Exception(() =>
         {
-            bool ticks = MacOsMachReader.TryGetSystemCpuTicks(out _);
-            bool cores = MacOsMachReader.TryGetPerCoreCpuTicks(out _);
-            bool vm = MacOsMachReader.TryGetVmStatistics(out _);
-            bool page = MacOsMachReader.TryGetPageSize(out _);
+            _ = MacOsMachReader.TryGetSystemCpuTicks(out _);
+            _ = MacOsMachReader.TryGetPerCoreCpuTicks(out _);
+            _ = MacOsMachReader.TryGetVmStatistics(out _);
+            _ = MacOsMachReader.TryGetPageSize(out _);
         });
 
         Assert.Null(ex);
@@ -240,7 +240,7 @@ public class PlatformDiAndMacOsTests
     }
 
     [Fact]
-    public void MacOsTelemetryProvider_GetCpuMetrics_ReportsSystemWideUsageOnSecondSample()
+    public async Task MacOsTelemetryProvider_GetCpuMetrics_ReportsSystemWideUsageOnSecondSample()
     {
         if (!OperatingSystem.IsMacOS())
         {
@@ -250,9 +250,9 @@ public class PlatformDiAndMacOsTests
         using var provider = new MacOsTelemetryProvider();
 
         // Перший вимір — базова точка (0%), другий — реальна оцінка системного завантаження.
-        provider.GetCpuMetrics();
-        Thread.Sleep(300);
-        var cpu = provider.GetCpuMetrics();
+        await provider.GetCpuMetricsAsync();
+        await Task.Delay(300);
+        var cpu = await provider.GetCpuMetricsAsync();
 
         Assert.InRange(cpu.TotalUsagePercentage, 0.0, 100.0);
         Assert.Equal(provider.LogicalCpuCount, cpu.CoreUsagesPercentage.Count);

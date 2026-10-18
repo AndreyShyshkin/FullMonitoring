@@ -8,7 +8,7 @@ namespace FullMonitoring.Tests;
 /// <summary>
 /// Тести Linux-провайдера телеметрії на ізольованих каталогах procfs/sysfs.
 /// </summary>
-public class LinuxTelemetryProviderTests : IDisposable
+public sealed class LinuxTelemetryProviderTests : IDisposable
 {
     private readonly string _baseDirectory;
     private readonly string _procRoot;

@@ -3,7 +3,7 @@ using System;
 
 namespace FullMonitoring;
 
-sealed class Program
+internal static class Program
 {
     // Код ініціалізації. Не використовуйте Avalonia, сторонні API або будь-який код,
     // що залежить від SynchronizationContext, до виклику AppMain: компоненти ще не ініціалізовані.

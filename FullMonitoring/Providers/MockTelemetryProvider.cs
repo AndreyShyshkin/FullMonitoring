@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using FullMonitoring.Interfaces;
@@ -34,6 +35,7 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
     /// Ініціалізує новий екземпляр <see cref="MockTelemetryProvider"/> із можливістю вказати seed для детермінованості.
     /// </summary>
     /// <param name="seed">Опціональний seed для детермінованого відтворення результатів у тестах.</param>
+    [SuppressMessage("Security", "S2245:Using pseudorandom number generators (PRNGs) is security-sensitive", Justification = "MockTelemetryProvider is a telemetry simulator for UI and unit tests; deterministic seed reproducibility is required.")]
     public MockTelemetryProvider(int? seed = null)
     {
         _random = seed.HasValue ? new Random(seed.Value) : new Random();
@@ -207,7 +209,7 @@ public sealed class MockTelemetryProvider : ITelemetryProvider
         );
     }
 
-    private DiskMetrics GenerateDiskMetricsInternal()
+    private static DiskMetrics GenerateDiskMetricsInternal()
     {
         const long systemDriveTotal = 512L * 1024 * 1024 * 1024;   // 512 ГБ
         const long systemDriveFree = 186L * 1024 * 1024 * 1024;    // 186 ГБ

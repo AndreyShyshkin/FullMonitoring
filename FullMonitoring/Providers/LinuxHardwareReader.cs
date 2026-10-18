@@ -159,7 +159,7 @@ internal sealed class LinuxHardwareReader
         }
     }
 
-    private string ReadChipName(string directory)
+    private static string ReadChipName(string directory)
     {
         try
         {

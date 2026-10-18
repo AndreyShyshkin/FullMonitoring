@@ -58,7 +58,7 @@ public class WindowsTelemetryProvider : ITelemetryProvider
             {
                 // Очікуване завершення при виклику Dispose
             }
-        });
+        }, _cts.Token);
     }
 
     private void RefreshSnapshot()
@@ -114,7 +114,7 @@ public class WindowsTelemetryProvider : ITelemetryProvider
         );
     }
 
-    private RamMetrics CollectRamMetrics()
+    private static RamMetrics CollectRamMetrics()
     {
         try
         {
@@ -133,7 +133,7 @@ public class WindowsTelemetryProvider : ITelemetryProvider
         }
     }
 
-    private DiskMetrics CollectDiskMetrics()
+    private static DiskMetrics CollectDiskMetrics()
     {
         try
         {
@@ -174,7 +174,7 @@ public class WindowsTelemetryProvider : ITelemetryProvider
         }
     }
 
-    private NetworkMetrics CollectNetworkMetrics()
+    private static NetworkMetrics CollectNetworkMetrics()
     {
         try
         {
@@ -284,14 +284,31 @@ public class WindowsTelemetryProvider : ITelemetryProvider
 
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed) return;
 
-        _cts.Cancel();
-        _timer.Dispose();
-        _reader.Dispose();
-        _cts.Dispose();
+        if (disposing)
+        {
+            _cts.Cancel();
+            try
+            {
+                _pollingTask?.Wait(TimeSpan.FromMilliseconds(500), CancellationToken.None);
+            }
+            catch (Exception)
+            {
+                // Очікуване завершення або переривання фонового завдання
+            }
+
+            _timer.Dispose();
+            _reader.Dispose();
+            _cts.Dispose();
+        }
 
         _disposed = true;
-        GC.SuppressFinalize(this);
     }
 }

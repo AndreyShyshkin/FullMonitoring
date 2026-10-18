@@ -97,6 +97,7 @@ public class ProcessManagerService : IProcessManagerService
                 }
                 catch (Exception)
                 {
+                    // Ігноруємо помилки звільнення дескриптора, якщо процес уже завершився або закритий ОС
                 }
             }
         }

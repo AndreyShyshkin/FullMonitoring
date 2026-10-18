@@ -1,0 +1,32 @@
+name: Static Code Analysis & Tests
+
+on:
+  push:
+    branches: [ main, "feature/**", "fix/**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore FullMonitoring.sln
+
+    - name: Verify code format (.editorconfig)
+      run: dotnet format --verify-no-changes --verbosity minimal
+
+    - name: Build with Roslyn & SonarAnalyzer (Zero Warnings)
+      run: dotnet build FullMonitoring.sln --no-incremental --configuration Release /warnaserror
+
+    - name: Run unit tests
+      run: dotnet test FullMonitoring.sln --configuration Release --no-build --verbosity normal

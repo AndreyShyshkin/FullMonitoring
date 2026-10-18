@@ -81,7 +81,7 @@ public class UiAdaptivityThemeAndLoadingTests
         using var overviewVm = new OverviewViewModel(provider, autoStartPolling: false);
         var processesVm = new ProcessesViewModel(new StubProcessService());
         var settingsVm = new SettingsViewModel();
-        var mainVm = new MainViewModel(overviewVm, processesVm, settingsVm);
+        _ = new MainViewModel(overviewVm, processesVm, settingsVm);
 
         var initialLightLabelsPaint = overviewVm.CpuXAxes[0].LabelsPaint;
 

@@ -126,7 +126,7 @@ public class MockTelemetryProviderTests
         for (int i = 0; i < 3; i++)
         {
             await Task.Delay(1000);
-            var snapshot = provider.GetSnapshot();
+            var snapshot = await provider.GetSnapshotAsync();
 
             Assert.NotNull(snapshot);
             Assert.InRange(snapshot.Cpu.TotalUsagePercentage, 0.0, 100.0);

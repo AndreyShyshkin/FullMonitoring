@@ -17,7 +17,7 @@ namespace FullMonitoring.Tests;
 /// Модульні тести для перевірки робочих процесів експорту (CSV/JSON) у ViewModel-компонентах (Issue #12).
 /// Перевіряє неблокуючу поведінку, інтеграцію з сервісом діалогу та обробку скасувань і помилок.
 /// </summary>
-public class ExportViewModelsTests : IDisposable
+public sealed class ExportViewModelsTests : IDisposable
 {
     private readonly string _tempDirectory;
 
@@ -71,8 +71,8 @@ public class ExportViewModelsTests : IDisposable
 
         public IReadOnlyList<ProcessItem> GetRunningProcesses(int limit = 50) => Processes;
         public Task<IReadOnlyList<ProcessItem>> GetRunningProcessesAsync(int limit = 50, CancellationToken cancellationToken = default) => Task.FromResult(Processes);
-        public bool KillProcess(int processId) => true;
-        public Task<bool> KillProcessAsync(int processId, CancellationToken cancellationToken = default) => Task.FromResult(true);
+        public bool KillProcess(int pid) => true;
+        public Task<bool> KillProcessAsync(int pid, CancellationToken cancellationToken = default) => Task.FromResult(true);
     }
 
     [Fact]

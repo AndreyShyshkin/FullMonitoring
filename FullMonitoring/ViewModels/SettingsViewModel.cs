@@ -172,7 +172,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         var targetTheme = value ? "Темна" : "Світла";
         if (!string.Equals(SelectedTheme, targetTheme, StringComparison.OrdinalIgnoreCase) &&
-            !(value == false && string.Equals(SelectedTheme, "Системна", StringComparison.OrdinalIgnoreCase)))
+            !(!value && string.Equals(SelectedTheme, "Системна", StringComparison.OrdinalIgnoreCase)))
         {
             SelectedTheme = targetTheme;
         }

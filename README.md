@@ -153,3 +153,20 @@ dotnet test
 ```bash
 dotnet run --project FullMonitoring/FullMonitoring.csproj
 ```
+
+### Статичний аналіз коду та лінтинг
+
+У проєкті налаштовано комплексний статичний аналіз коду на базі **SonarAnalyzer.CSharp** (SonarQube/SonarCloud правила для .NET), **Roslyn NetAnalyzers** та **dotnet format** (`.editorconfig`):
+
+```bash
+# Запуск комплексного статичного аналізу (Quality Gate: 100% / Рейтинг A)
+./scripts/run-static-analysis.sh
+
+# Або окремі кроки:
+dotnet format --verify-no-changes
+dotnet build FullMonitoring.sln --no-incremental /warnaserror
+dotnet test FullMonitoring.sln
+```
+
+Детальний звіт із порівняльними метриками до та після усунення технічного боргу наведено у файлі [STATIC_ANALYSIS_REPORT.md](STATIC_ANALYSIS_REPORT.md).
+
