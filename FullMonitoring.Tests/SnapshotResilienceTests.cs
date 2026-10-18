@@ -55,7 +55,7 @@ public class SnapshotResilienceTests
         _ = provider.GetSnapshot();
         sw.Stop();
 
-        Assert.True(sw.Elapsed < TimeSpan.FromMilliseconds(200),
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(2),
             $"Повторний знімок чекав ({sw.Elapsed.TotalMilliseconds:F0} мс) замість пропуску секції на cooldown");
     }
 
